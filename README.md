@@ -1,3 +1,4 @@
+
 # 🔐 Credential Vault CLI Tool
 
 A secure, command-line password manager built in Python.  
@@ -11,6 +12,9 @@ Everything is stored offline — no plaintext, no leaks.
 - **Master Password Encryption** – Your vault is protected using AES-256
 - **Add Credentials** – Store site, username, and password securely
 - **Retrieve Credentials** – Get your saved credentials using the `get` command
+- **Delete Credentials** – Remove a site’s credentials from your encrypted vault
+- **List Stored Sites** – View all site names currently stored in your vault
+- **Copy Passwords to Clipboard** – Use the `copy` command to safely copy a stored password
 - **Command Line Interface** – Built with `Click` for clean prompts and options
 - **Encrypted Vault File** – Data is saved in `vault.json.enc`, fully encrypted
 
@@ -29,7 +33,8 @@ cd credential-vault-cli
 
 ```bash
 python -m venv venv
-.\venv\Scripts\activate
+.
+env\Scripts ctivate
 pip install -r requirements.txt
 ```
 
@@ -50,6 +55,21 @@ python cli.py add
 ### Retrieve Credentials
 ```bash
 python cli.py get
+```
+
+### List All Sites
+```bash
+python cli.py list
+```
+
+### Delete Credentials
+```bash
+python cli.py delete
+```
+
+### Copy Password to Clipboard
+```bash
+python cli.py copy
 ```
 
 ---
