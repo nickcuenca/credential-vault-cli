@@ -14,13 +14,11 @@ def cli():
 def init(master):
     """
     Initializes a new encrypted credential vault.
-    The master password is used to derive an encryption key,
-    which is used to encrypt an empty dictionary and save it to disk.
     """
-    key = generate_key(master)  # Derive a consistent encryption key from the password
-    encrypted = encrypt_data({}, key)  # Encrypt an empty dictionary
+    key = generate_key(master)  # Derive encryption key from master password
+    encrypted = encrypt_data({}, key)  # Start with an empty vault
 
-    # Save encrypted data to file
+    # Save encrypted vault
     with open("vault.json.enc", "wb") as f:
         f.write(encrypted)
 
@@ -38,35 +36,37 @@ def init(master):
 def add(master, site, username, password):
     """
     Adds credentials for a given site to the encrypted vault.
-    If the vault exists, it decrypts, updates it, re-encrypts, and saves it.
     """
-    from vault import generate_key, encrypt_data, decrypt_data
+    from vault import generate_key, encrypt_data, decrypt_data, check_password_strength
     import os
 
     key = generate_key(master)
 
     try:
-        # Check that vault exists
+        # Check for existing vault
         if not os.path.exists("vault.json.enc"):
             click.echo("❌ Vault not initialized. Run `init` first.")
             return
 
-        # Load and decrypt vault
+        # Decrypt current vault
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
 
-        # Add the new site credentials
+        # Add credentials
         data[site] = {
             "username": username,
             "password": password
         }
 
-        # Re-encrypt and save the updated vault
+        # Save updated vault
         with open("vault.json.enc", "wb") as f:
             f.write(encrypt_data(data, key))
 
+        # Show strength
+        strength = check_password_strength(password)
         click.echo(f"✅ Credentials for '{site}' added to vault!")
+        click.echo(f"🧠 Password Strength: {strength}")
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
@@ -80,7 +80,7 @@ def add(master, site, username, password):
 @click.option('--site', prompt="Site")
 def get(master, site):
     """
-    Retrieves and displays credentials for a given site from the encrypted vault.
+    Retrieves and displays credentials for a given site.
     """
     from vault import generate_key, decrypt_data
     import os
@@ -88,17 +88,14 @@ def get(master, site):
     key = generate_key(master)
 
     try:
-        # Validate vault presence
         if not os.path.exists("vault.json.enc"):
             click.echo("❌ Vault not initialized. Run `init` first.")
             return
 
-        # Decrypt vault
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
 
-        # Display credentials
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
             return
@@ -119,7 +116,7 @@ def get(master, site):
 @click.option('--master', prompt=True, hide_input=True)
 def list(master):
     """
-    Lists all saved site names stored in the encrypted vault.
+    Lists all saved site names.
     """
     from vault import generate_key, decrypt_data
     import os
@@ -155,7 +152,7 @@ def list(master):
 @click.option('--site', prompt="Site")
 def delete(master, site):
     """
-    Deletes credentials for a given site from the encrypted vault.
+    Deletes credentials for a given site from the vault.
     """
     from vault import generate_key, encrypt_data, decrypt_data
     import os
@@ -194,7 +191,7 @@ def delete(master, site):
 @click.option('--site', prompt="Site")
 def copy(master, site):
     """
-    Copies the password for a given site to the clipboard.
+    Copies the password for a given site to clipboard.
     """
     from vault import generate_key, decrypt_data
     import pyperclip
@@ -229,8 +226,7 @@ def copy(master, site):
 @click.option('--master', prompt=True, hide_input=True)
 def export(master):
     """
-    Decrypts and exports all credentials to a plaintext file (vault_export.txt).
-    NOTE: File is not encrypted — store it safely.
+    Exports all credentials to a plaintext file.
     """
     from vault import generate_key, decrypt_data
     import os
@@ -254,13 +250,13 @@ def export(master):
             for site, creds in data.items():
                 f.write(f"Site: {site}\n")
                 f.write(f"  Username: {creds['username']}\n")
-                f.write(f"  Password: {creds['password']}\n")
-                f.write("\n")
+                f.write(f"  Password: {creds['password']}\n\n")
 
         click.echo("✅ Vault successfully exported to 'vault_export.txt'.")
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
+
 
 # ---------------------
 # GENERATE COMMAND
@@ -270,25 +266,23 @@ def export(master):
 @click.option('--copy', is_flag=True, help="Copy generated password to clipboard")
 def generate(length, copy):
     """
-    Generates a secure random password.
-    Optionally copies it to your clipboard.
+    Generates a secure password and optionally copies it.
     """
     import string
     import secrets
     import pyperclip
+    from vault import check_password_strength
 
-    # Define allowed characters
     chars = string.ascii_letters + string.digits + string.punctuation
-
-    # Generate a secure password
     password = ''.join(secrets.choice(chars) for _ in range(length))
 
-    # Output result
     click.echo(f"🔐 Generated Password: {password}")
+    click.echo(f"🧠 Password Strength: {check_password_strength(password)}")
 
     if copy:
         pyperclip.copy(password)
         click.echo("📋 Password copied to clipboard!")
+
 
 # ---------------------
 # MAIN ENTRY POINT

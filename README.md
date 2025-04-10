@@ -1,4 +1,3 @@
-
 # 🔐 Credential Vault CLI Tool
 
 A secure, command-line password manager built in Python.  
@@ -12,13 +11,12 @@ Everything is stored offline — no plaintext, no leaks.
 - **Master Password Encryption** – Your vault is protected using AES-256
 - **Add Credentials** – Store site, username, and password securely
 - **Retrieve Credentials** – Get your saved credentials using the `get` command
-- **List Stored Sites** – View a list of saved sites with `list`
-- **Delete Credentials** – Remove credentials with `delete`
-- **Copy to Clipboard** – Copy password directly to clipboard with `copy`
-- **Export Vault** – Decrypt and save your vault as plaintext with `export`
-- **Generate Passwords** – Create strong random passwords with `generate`
-- **Command Line Interface** – Clean interface powered by `Click`
-- **Encrypted Vault File** – Data is saved in `vault.json.enc`, fully encrypted
+- **Password Strength Checker** – Provides feedback on whether a password is 🔴 Weak, 🟡 Medium, or 🟢 Strong
+- **Generate Secure Passwords** – Quickly create strong, random passwords
+- **Copy to Clipboard** – Instantly copy any password for quick access
+- **Export Vault** – Save all credentials into a plaintext file if needed
+- **Unit Tested** – Includes tests for encryption logic and password strength
+- **Command Line Interface** – Built with `Click` for clean prompts and options
 
 ---
 
@@ -59,7 +57,7 @@ python cli.py add
 python cli.py get
 ```
 
-### List All Sites
+### List Stored Sites
 ```bash
 python cli.py list
 ```
@@ -74,24 +72,15 @@ python cli.py delete
 python cli.py copy
 ```
 
-### Export Vault to Plaintext
+### Export Vault to TXT (not encrypted)
 ```bash
 python cli.py export
 ```
 
-### Generate a Secure Password
+### Generate Password
 ```bash
 python cli.py generate
-```
-
-### Custom Length & Clipboard Copy
-```bash
 python cli.py generate --length 24 --copy
-```
-
-```
-🔐 Generated Password: A!uF9#k@7T3q)Y$g2LwVz8Bd
-📋 Password copied to clipboard!
 ```
 
 ---
@@ -104,6 +93,8 @@ Master: **************
 Site: github.com
 Username: nickcuenca
 Password: **************
+✅ Credentials for 'github.com' added to vault!
+🧠 Password Strength: 🟢 Strong
 ```
 
 ```bash
@@ -118,26 +109,45 @@ Site: github.com
 
 ---
 
+## 🧪 Unit Testing
+
+This tool includes basic unit tests to ensure cryptographic reliability and password scoring logic.
+
+### Run All Tests
+
+```bash
+python -m unittest discover tests
+```
+
+### Folder Structure
+
+```
+tests/
+├── test_password_strength.py   # Checks weak, medium, strong ratings
+├── test_vault.py               # Verifies encryption/decryption integrity
+├── __init__.py                 # Enables Python test discovery
+```
+
+---
+
 ## 🔐 Security Notes
 
 - Your master password is **never stored**
 - The vault is encrypted using a key derived from your master password
 - If you lose the password, **there is no way to recover the data**
-- Use `export` responsibly — the file is **not encrypted**
 
 ---
 
 ## 📁 Files
 
-| File              | Description                                     |
-|-------------------|-------------------------------------------------|
-| `cli.py`          | Main command-line interface                     |
-| `vault.py`        | Handles encryption/decryption logic             |
-| `vault.json.enc`  | Encrypted vault (auto-generated)                |
-| `vault_export.txt`| Plaintext export (manually generated)           |
-| `test_vault.py`   | Unit tests for core encryption functions        |
-| `requirements.txt`| Python dependencies                             |
-| `.gitignore`      | Prevents vault and virtualenv from being tracked|
+| File | Description |
+|------|-------------|
+| `cli.py` | Main command-line tool |
+| `vault.py` | Handles encryption/decryption and password strength logic |
+| `vault.json.enc` | Encrypted credentials (auto-generated) |
+| `requirements.txt` | Python dependencies |
+| `.gitignore` | Prevents vault + virtual env from being committed |
+| `tests/` | Contains unit tests for password logic and encryption |
 
 ---
 
@@ -149,5 +159,4 @@ Made with 💻 by [Nicolas Cuenca](https://github.com/nickcuenca)
 
 ## 📌 Disclaimer
 
-This tool is for **personal use or educational purposes only**.  
-Do not use to store or manage other people's data.
+This tool is for **personal use or educational purposes only**. Do not use to store or manage other people's data.
