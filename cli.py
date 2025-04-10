@@ -262,6 +262,33 @@ def export(master):
     except Exception as e:
         click.echo(f"❌ Error: {e}")
 
+# ---------------------
+# GENERATE COMMAND
+# ---------------------
+@cli.command()
+@click.option('--length', default=16, prompt="Password Length", help="Length of the generated password")
+@click.option('--copy', is_flag=True, help="Copy generated password to clipboard")
+def generate(length, copy):
+    """
+    Generates a secure random password.
+    Optionally copies it to your clipboard.
+    """
+    import string
+    import secrets
+    import pyperclip
+
+    # Define allowed characters
+    chars = string.ascii_letters + string.digits + string.punctuation
+
+    # Generate a secure password
+    password = ''.join(secrets.choice(chars) for _ in range(length))
+
+    # Output result
+    click.echo(f"🔐 Generated Password: {password}")
+
+    if copy:
+        pyperclip.copy(password)
+        click.echo("📋 Password copied to clipboard!")
 
 # ---------------------
 # MAIN ENTRY POINT

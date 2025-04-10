@@ -16,6 +16,7 @@ Everything is stored offline — no plaintext, no leaks.
 - **Delete Credentials** – Remove credentials with `delete`
 - **Copy to Clipboard** – Copy password directly to clipboard with `copy`
 - **Export Vault** – Decrypt and save your vault as plaintext with `export`
+- **Generate Passwords** – Create strong random passwords with `generate`
 - **Command Line Interface** – Clean interface powered by `Click`
 - **Encrypted Vault File** – Data is saved in `vault.json.enc`, fully encrypted
 
@@ -76,6 +77,21 @@ python cli.py copy
 ### Export Vault to Plaintext
 ```bash
 python cli.py export
+```
+
+### Generate a Secure Password
+```bash
+python cli.py generate
+```
+
+### Custom Length & Clipboard Copy
+```bash
+python cli.py generate --length 24 --copy
+```
+
+```
+🔐 Generated Password: A!uF9#k@7T3q)Y$g2LwVz8Bd
+📋 Password copied to clipboard!
 ```
 
 ---
