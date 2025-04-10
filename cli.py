@@ -1,5 +1,5 @@
 import click
-from vault import generate_key, encrypt_data
+from vault import generate_key, encrypt_data, is_vault_locked, update_last_access
 
 # Define a group of CLI commands (init, add, get, etc.)
 @click.group()
@@ -15,13 +15,13 @@ def init(master):
     """
     Initializes a new encrypted credential vault.
     """
-    key = generate_key(master)  # Derive encryption key from master password
-    encrypted = encrypt_data({}, key)  # Start with an empty vault
+    key = generate_key(master)
+    encrypted = encrypt_data({}, key)
 
-    # Save encrypted vault
     with open("vault.json.enc", "wb") as f:
         f.write(encrypted)
 
+    update_last_access()
     click.echo("🔐 Vault initialized and encrypted!")
 
 
@@ -40,33 +40,33 @@ def add(master, site, username, password):
     from vault import generate_key, encrypt_data, decrypt_data, check_password_strength
     import os
 
+    if is_vault_locked():
+        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
+        return
+
     key = generate_key(master)
 
     try:
-        # Check for existing vault
         if not os.path.exists("vault.json.enc"):
             click.echo("❌ Vault not initialized. Run `init` first.")
             return
 
-        # Decrypt current vault
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
 
-        # Add credentials
         data[site] = {
             "username": username,
             "password": password
         }
 
-        # Save updated vault
         with open("vault.json.enc", "wb") as f:
             f.write(encrypt_data(data, key))
 
-        # Show strength
         strength = check_password_strength(password)
         click.echo(f"✅ Credentials for '{site}' added to vault!")
         click.echo(f"🧠 Password Strength: {strength}")
+        update_last_access()
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
@@ -84,6 +84,10 @@ def get(master, site):
     """
     from vault import generate_key, decrypt_data
     import os
+
+    if is_vault_locked():
+        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
+        return
 
     key = generate_key(master)
 
@@ -104,6 +108,7 @@ def get(master, site):
         click.echo("🔍 Credentials found:")
         click.echo(f"  👤 Username: {creds['username']}")
         click.echo(f"  🔑 Password: {creds['password']}")
+        update_last_access()
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
@@ -120,6 +125,10 @@ def list(master):
     """
     from vault import generate_key, decrypt_data
     import os
+
+    if is_vault_locked():
+        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
+        return
 
     key = generate_key(master)
 
@@ -139,6 +148,7 @@ def list(master):
         click.echo("🔐 Stored Sites:")
         for site in data:
             click.echo(f"  - {site}")
+        update_last_access()
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
@@ -156,6 +166,10 @@ def delete(master, site):
     """
     from vault import generate_key, encrypt_data, decrypt_data
     import os
+
+    if is_vault_locked():
+        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
+        return
 
     key = generate_key(master)
 
@@ -178,6 +192,7 @@ def delete(master, site):
             f.write(encrypt_data(data, key))
 
         click.echo(f"🗑️ Credentials for '{site}' deleted from vault.")
+        update_last_access()
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
@@ -197,6 +212,10 @@ def copy(master, site):
     import pyperclip
     import os
 
+    if is_vault_locked():
+        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
+        return
+
     key = generate_key(master)
 
     try:
@@ -214,6 +233,7 @@ def copy(master, site):
 
         pyperclip.copy(data[site]["password"])
         click.echo(f"📋 Password for '{site}' copied to clipboard!")
+        update_last_access()
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
@@ -230,6 +250,10 @@ def export(master):
     """
     from vault import generate_key, decrypt_data
     import os
+
+    if is_vault_locked():
+        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
+        return
 
     key = generate_key(master)
 
@@ -253,6 +277,7 @@ def export(master):
                 f.write(f"  Password: {creds['password']}\n\n")
 
         click.echo("✅ Vault successfully exported to 'vault_export.txt'.")
+        update_last_access()
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")

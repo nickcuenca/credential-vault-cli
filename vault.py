@@ -1,7 +1,13 @@
 import json
 import base64
 import string
+import time
+import os
 from cryptography.fernet import Fernet
+
+LOCK_TIMEOUT = 300  # 5 minutes in seconds
+LOCK_FILE = ".last_access"
+
 
 def generate_key(master_password: str) -> bytes:
     return base64.urlsafe_b64encode(master_password.encode().ljust(32)[:32])
@@ -33,3 +39,14 @@ def check_password_strength(password):
         return '🟡 Medium'
     else:
         return '🔴 Weak'
+
+def update_last_access():
+    with open(LOCK_FILE, "w") as f:
+        f.write(str(int(time.time())))
+
+def is_vault_locked():
+    if not os.path.exists(LOCK_FILE):
+        return False
+    with open(LOCK_FILE, "r") as f:
+        last = int(f.read().strip())
+    return (time.time() - last) > LOCK_TIMEOUT

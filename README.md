@@ -15,6 +15,7 @@ Everything is stored offline — no plaintext, no leaks.
 - **Generate Secure Passwords** – Quickly create strong, random passwords
 - **Copy to Clipboard** – Instantly copy any password for quick access
 - **Export Vault** – Save all credentials into a plaintext file if needed
+- **Vault Lock Timeout** – Auto-locks vault after 5 minutes of inactivity
 - **Unit Tested** – Includes tests for encryption logic and password strength
 - **Command Line Interface** – Built with `Click` for clean prompts and options
 
@@ -135,6 +136,7 @@ tests/
 - Your master password is **never stored**
 - The vault is encrypted using a key derived from your master password
 - If you lose the password, **there is no way to recover the data**
+- Auto-locks after 5 minutes of inactivity for added safety
 
 ---
 
@@ -143,11 +145,12 @@ tests/
 | File | Description |
 |------|-------------|
 | `cli.py` | Main command-line tool |
-| `vault.py` | Handles encryption/decryption and password strength logic |
+| `vault.py` | Handles encryption/decryption, password logic, and lock checks |
 | `vault.json.enc` | Encrypted credentials (auto-generated) |
 | `requirements.txt` | Python dependencies |
 | `.gitignore` | Prevents vault + virtual env from being committed |
 | `tests/` | Contains unit tests for password logic and encryption |
+| `.last_access` | Used internally to track session timeout for auto-lock |
 
 ---
 
