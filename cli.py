@@ -1,7 +1,7 @@
 import click
 from vault import generate_key, encrypt_data
 
-# Create a Click command group to support multiple subcommands (init, add, get, etc.)
+# Define a group of CLI commands (init, add, get, etc.)
 @click.group()
 def cli():
     pass
@@ -9,19 +9,18 @@ def cli():
 # ---------------------
 # INIT COMMAND
 # ---------------------
-
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 def init(master):
     """
     Initializes a new encrypted credential vault.
-    Prompts the user for a master password, which is used to derive the encryption key.
-    The vault is saved as an AES-encrypted file (vault.json.enc).
+    The master password is used to derive an encryption key,
+    which is used to encrypt an empty dictionary and save it to disk.
     """
-    key = generate_key(master)  # Derive a 256-bit encryption key from the password
-    encrypted = encrypt_data({}, key)  # Encrypt an empty vault (no credentials yet)
+    key = generate_key(master)  # Derive a consistent encryption key from the password
+    encrypted = encrypt_data({}, key)  # Encrypt an empty dictionary
 
-    # Save the encrypted vault to a file
+    # Save encrypted data to file
     with open("vault.json.enc", "wb") as f:
         f.write(encrypted)
 
@@ -31,7 +30,6 @@ def init(master):
 # ---------------------
 # ADD COMMAND
 # ---------------------
-
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 @click.option('--site', prompt="Site")
@@ -39,96 +37,89 @@ def init(master):
 @click.option('--password', prompt="Password", hide_input=True, confirmation_prompt=True)
 def add(master, site, username, password):
     """
-    Adds a new credential (site, username, password) to the encrypted vault.
-    Prompts the user for the master password, decrypts the vault, appends the new entry,
-    then re-encrypts and saves it securely.
+    Adds credentials for a given site to the encrypted vault.
+    If the vault exists, it decrypts, updates it, re-encrypts, and saves it.
     """
     from vault import generate_key, encrypt_data, decrypt_data
     import os
 
-    key = generate_key(master)  # Derive encryption key from master password
+    key = generate_key(master)
 
     try:
-        # Ensure the vault file exists before proceeding
+        # Check that vault exists
         if not os.path.exists("vault.json.enc"):
             click.echo("❌ Vault not initialized. Run `init` first.")
             return
 
-        # Load and decrypt the existing vault
+        # Load and decrypt vault
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
 
-        # Add new credentials to the vault under the provided site
+        # Add the new site credentials
         data[site] = {
             "username": username,
             "password": password
         }
 
-        # Re-encrypt the updated vault and overwrite the previous file
+        # Re-encrypt and save the updated vault
         with open("vault.json.enc", "wb") as f:
             f.write(encrypt_data(data, key))
 
         click.echo(f"✅ Credentials for '{site}' added to vault!")
 
     except Exception as e:
-        # Handle decryption failures or file corruption
         click.echo(f"❌ Error: {e}")
 
 
 # ---------------------
 # GET COMMAND
 # ---------------------
-
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 @click.option('--site', prompt="Site")
 def get(master, site):
     """
-    Retrieves credentials for a given site from the encrypted vault.
-    Requires the master password to decrypt and access the data.
+    Retrieves and displays credentials for a given site from the encrypted vault.
     """
     from vault import generate_key, decrypt_data
     import os
 
-    key = generate_key(master)  # Derive encryption key from master password
+    key = generate_key(master)
 
     try:
-        # Ensure the vault file exists
+        # Validate vault presence
         if not os.path.exists("vault.json.enc"):
             click.echo("❌ Vault not initialized. Run `init` first.")
             return
 
-        # Load and decrypt the vault
+        # Decrypt vault
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
 
-        # Check if the site exists in the vault
+        # Display credentials
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
             return
 
-        # Extract and display the credentials
         creds = data[site]
         click.echo("🔍 Credentials found:")
         click.echo(f"  👤 Username: {creds['username']}")
         click.echo(f"  🔑 Password: {creds['password']}")
 
     except Exception as e:
-        # Handle decryption errors or file corruption
         click.echo(f"❌ Error: {e}")
+
 
 # ---------------------
 # LIST COMMAND
 # ---------------------
-
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 def list(master):
     """
-    Lists all saved sites in the encrypted vault.
-    Allows users to quickly see which accounts are stored.
+    Lists all saved site names stored in the encrypted vault.
     """
     from vault import generate_key, decrypt_data
     import os
@@ -142,7 +133,6 @@ def list(master):
 
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
-
         data = decrypt_data(encrypted_data, key)
 
         if not data:
@@ -160,14 +150,12 @@ def list(master):
 # ---------------------
 # DELETE COMMAND
 # ---------------------
-
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 @click.option('--site', prompt="Site")
 def delete(master, site):
     """
     Deletes credentials for a given site from the encrypted vault.
-    Prompts for master password, confirms existence, and removes the entry.
     """
     from vault import generate_key, encrypt_data, decrypt_data
     import os
@@ -201,14 +189,12 @@ def delete(master, site):
 # ---------------------
 # COPY COMMAND
 # ---------------------
-
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 @click.option('--site', prompt="Site")
 def copy(master, site):
     """
     Copies the password for a given site to the clipboard.
-    Requires the master password to decrypt and access the vault.
     """
     from vault import generate_key, decrypt_data
     import pyperclip
@@ -229,7 +215,6 @@ def copy(master, site):
             click.echo(f"❌ No credentials found for '{site}'.")
             return
 
-        # Copy password to clipboard
         pyperclip.copy(data[site]["password"])
         click.echo(f"📋 Password for '{site}' copied to clipboard!")
 
@@ -237,7 +222,49 @@ def copy(master, site):
         click.echo(f"❌ Error: {e}")
 
 
-# Entry point for the CLI tool
-# Ensures that commands are only run when the script is executed directly
+# ---------------------
+# EXPORT COMMAND
+# ---------------------
+@cli.command()
+@click.option('--master', prompt=True, hide_input=True)
+def export(master):
+    """
+    Decrypts and exports all credentials to a plaintext file (vault_export.txt).
+    NOTE: File is not encrypted — store it safely.
+    """
+    from vault import generate_key, decrypt_data
+    import os
+
+    key = generate_key(master)
+
+    try:
+        if not os.path.exists("vault.json.enc"):
+            click.echo("❌ Vault not initialized. Run `init` first.")
+            return
+
+        with open("vault.json.enc", "rb") as f:
+            encrypted_data = f.read()
+        data = decrypt_data(encrypted_data, key)
+
+        if not data:
+            click.echo("⚠️ Vault is empty. Nothing to export.")
+            return
+
+        with open("vault_export.txt", "w", encoding="utf-8") as f:
+            for site, creds in data.items():
+                f.write(f"Site: {site}\n")
+                f.write(f"  Username: {creds['username']}\n")
+                f.write(f"  Password: {creds['password']}\n")
+                f.write("\n")
+
+        click.echo("✅ Vault successfully exported to 'vault_export.txt'.")
+
+    except Exception as e:
+        click.echo(f"❌ Error: {e}")
+
+
+# ---------------------
+# MAIN ENTRY POINT
+# ---------------------
 if __name__ == '__main__':
     cli()
