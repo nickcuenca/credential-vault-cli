@@ -308,6 +308,56 @@ def generate(length, copy):
         pyperclip.copy(password)
         click.echo("📋 Password copied to clipboard!")
 
+# ---------------------
+# EDIT COMMAND
+# ---------------------
+@cli.command()
+@click.option('--master', prompt=True, hide_input=True)
+@click.option('--site', prompt="Site")
+@click.option('--new_username', prompt="New Username (press Enter to skip)", default="", show_default=False)
+@click.option('--new_password', prompt="New Password (press Enter to skip)", hide_input=True, confirmation_prompt=True, default="", show_default=False)
+def edit(master, site, new_username, new_password):
+    """
+    Edits the username and/or password for a given site.
+    """
+    from vault import generate_key, encrypt_data, decrypt_data, check_password_strength
+    import os
+
+    if is_vault_locked():
+        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
+        return
+
+    key = generate_key(master)
+
+    try:
+        if not os.path.exists("vault.json.enc"):
+            click.echo("❌ Vault not initialized. Run `init` first.")
+            return
+
+        with open("vault.json.enc", "rb") as f:
+            encrypted_data = f.read()
+        data = decrypt_data(encrypted_data, key)
+
+        if site not in data:
+            click.echo(f"❌ No credentials found for '{site}'.")
+            return
+
+        if new_username:
+            data[site]["username"] = new_username
+
+        if new_password:
+            data[site]["password"] = new_password
+            strength = check_password_strength(new_password)
+            click.echo(f"🧠 New Password Strength: {strength}")
+
+        with open("vault.json.enc", "wb") as f:
+            f.write(encrypt_data(data, key))
+
+        click.echo(f"✏️ Credentials for '{site}' successfully updated.")
+        update_last_access()
+
+    except Exception as e:
+        click.echo(f"❌ Error: {e}")
 
 # ---------------------
 # MAIN ENTRY POINT

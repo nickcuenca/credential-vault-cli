@@ -11,12 +11,13 @@ Everything is stored offline — no plaintext, no leaks.
 - **Master Password Encryption** – Your vault is protected using AES-256
 - **Add Credentials** – Store site, username, and password securely
 - **Retrieve Credentials** – Get your saved credentials using the `get` command
+- **Edit Credentials** – Update username or password for an existing entry
 - **Password Strength Checker** – Provides feedback on whether a password is 🔴 Weak, 🟡 Medium, or 🟢 Strong
 - **Generate Secure Passwords** – Quickly create strong, random passwords
 - **Copy to Clipboard** – Instantly copy any password for quick access
 - **Export Vault** – Save all credentials into a plaintext file if needed
-- **Vault Lock Timeout** – Auto-locks vault after 5 minutes of inactivity
 - **Unit Tested** – Includes tests for encryption logic and password strength
+- **Lock Timeout** – Auto-locks the vault after 5 minutes of inactivity
 - **Command Line Interface** – Built with `Click` for clean prompts and options
 
 ---
@@ -56,6 +57,11 @@ python cli.py add
 ### Retrieve Credentials
 ```bash
 python cli.py get
+```
+
+### Edit Existing Credentials
+```bash
+python cli.py edit
 ```
 
 ### List Stored Sites
@@ -108,6 +114,15 @@ Site: github.com
   🔑 Password: SuperSecret123!
 ```
 
+```bash
+python cli.py edit
+Master: **************
+Site: github.com
+New Username [Leave blank to keep existing]: nick_c_updated
+New Password [Leave blank to keep existing]: **************
+✅ Credentials for 'github.com' updated!
+```
+
 ---
 
 ## 🧪 Unit Testing
@@ -136,7 +151,6 @@ tests/
 - Your master password is **never stored**
 - The vault is encrypted using a key derived from your master password
 - If you lose the password, **there is no way to recover the data**
-- Auto-locks after 5 minutes of inactivity for added safety
 
 ---
 
@@ -145,12 +159,12 @@ tests/
 | File | Description |
 |------|-------------|
 | `cli.py` | Main command-line tool |
-| `vault.py` | Handles encryption/decryption, password logic, and lock checks |
+| `vault.py` | Handles encryption/decryption, password strength, lock session |
 | `vault.json.enc` | Encrypted credentials (auto-generated) |
+| `.last_access` | Tracks session lock timeout (ignored in `.gitignore`) |
 | `requirements.txt` | Python dependencies |
-| `.gitignore` | Prevents vault + virtual env from being committed |
 | `tests/` | Contains unit tests for password logic and encryption |
-| `.last_access` | Used internally to track session timeout for auto-lock |
+| `.gitignore` | Prevents vault + virtual env from being committed |
 
 ---
 

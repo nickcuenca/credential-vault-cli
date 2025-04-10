@@ -5,3 +5,4 @@ vault_export.txt
 # Ignore test outputs
 *.log
 *.txt
+.last_access
