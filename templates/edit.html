@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Credentials</title>
+</head>
+<body>
+    <h1>✏️ Edit Credentials for {{ site }}</h1>
+
+    <form method="POST">
+        <label>Username:</label><br>
+        <input type="text" name="username" value="{{ creds['username'] }}" required><br><br>
+
+        <label>Password:</label><br>
+        <input type="text" name="password" value="{{ creds['password'] }}" required><br><br>
+
+        <button type="submit">💾 Save Changes</button>
+        <a href="{{ url_for('dashboard') }}">🔙 Back</a>
+    </form>
+</body>
+</html>

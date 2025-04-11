@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login to Vault</title>
+</head>
+<body>
+    <h2>🔐 Enter Master Password</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <p style="color: red;">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+    <form method="POST">
+        <input type="password" name="master" placeholder="Master Password" required>
+        <button type="submit">Unlock</button>
+    </form>
+</body>
+</html>
