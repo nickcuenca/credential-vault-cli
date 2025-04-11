@@ -4,7 +4,7 @@ import base64
 import json
 import string
 import time
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
@@ -57,7 +57,10 @@ def encrypt_data(data: dict, key: bytes) -> bytes:
 
 def decrypt_data(ciphertext: bytes, key: bytes) -> dict:
     f = Fernet(key)
-    return json.loads(f.decrypt(ciphertext).decode())
+    try:
+        return json.loads(f.decrypt(ciphertext).decode())
+    except InvalidToken:
+        raise ValueError("Incorrect master password or corrupted vault.")
 
 # ---------------------
 # Password Strength Check

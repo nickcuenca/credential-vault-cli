@@ -126,6 +126,7 @@ python -m unittest discover tests
 | `.last_access` | Session lock timer |
 | `tests/` | Unit tests for core features |
 | `.gitignore` | Ensures vault + virtual env + salt are not committed |
+| `requirements.txt` | Python dependencies (Click, cryptography, pyperclip) |
 
 ---
 

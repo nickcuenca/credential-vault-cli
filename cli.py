@@ -380,7 +380,7 @@ def search(master, query):
         matches = {site: creds for site, creds in data.items() if query.lower() in site.lower()}
         if not matches:
             click.echo("🔎 No matches found.")
-            log_action("SEARCH", note=query, status="SKIPPED", note="No matches found")
+            log_action("SEARCH", status="SKIPPED", note=f"Query: '{query}' — No matches found")
             return
 
         click.echo("🔍 Matching Results:")
@@ -393,8 +393,8 @@ def search(master, query):
     except Exception as e:
         click.echo(f"❌ Error: {e}")
         traceback.print_exc()
-        log_action("SEARCH", note=query, status="FAILURE", note=str(e))
-
+        # log_action("SEARCH", note=query, status="FAILURE", note=str(e))
+        log_action("SEARCH", status="FAILURE", note=f"Query: '{query}' — Error: {e}")
 
 # ---------------------
 # HELP ENTRY
