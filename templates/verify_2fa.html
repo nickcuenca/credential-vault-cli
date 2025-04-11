@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Verify 2FA{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">🔐 Enter 2FA Code</h2>
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="code" class="form-label">Authenticator Code</label>
+        <input type="text" name="code" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Verify</button>
+</form>
+
+<hr>
+
+<p class="mt-3">
+    <strong>New user?</strong> Not set up yet?
+    <a href="{{ url_for('show_qr') }}" class="btn btn-outline-secondary btn-sm ms-2">
+        📲 Set up 2FA
+    </a>
+</p>
+{% endblock %}

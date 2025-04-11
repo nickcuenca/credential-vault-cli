@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}2FA Setup{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">📲 Scan QR Code to Set Up 2FA</h2>
+<p>Scan this QR code using Google Authenticator or any compatible app:</p>
+<img src="data:image/png;base64,{{ qr }}" alt="QR Code" class="img-fluid border p-2">
+<br><br>
+<a href="{{ url_for('verify_2fa') }}" class="btn btn-success">Next</a>
+{% endblock %}

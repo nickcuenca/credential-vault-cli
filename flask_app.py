@@ -1,18 +1,21 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash, Response, send_file
-from vault import generate_key, decrypt_data, encrypt_data, update_last_access, is_vault_locked
+from vault import generate_key, decrypt_data, encrypt_data, update_last_access, is_vault_locked, read_audit_log
 from functools import wraps
+from totp import verify_totp_code, get_provisioning_uri, get_or_create_totp_secret
 import os
+import qrcode
+import base64
 import io
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # Replace with a secure key in production
+app.secret_key = 'supersecretkey'  # Replace in production
 
 VAULT_FILE = 'vault.json.enc'
+TOTP_SECRET = get_or_create_totp_secret()
 
 def load_vault_data():
     try:
         key = generate_key(session['master'])
-
         with open(VAULT_FILE, "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
@@ -26,12 +29,11 @@ def load_vault_data():
 
     except ValueError:
         flash("❌ Incorrect master password or corrupted vault.", "danger")
-        session.pop('master', None)
+        session.clear()
         return None
-
     except Exception as e:
         flash(f"Unexpected error: {e}", "danger")
-        session.pop('master', None)
+        session.clear()
         return None
 
 
@@ -40,15 +42,57 @@ def login():
     if request.method == 'POST':
         master = request.form['master']
         session['master'] = master
+
+        # Validate password right away
+        try:
+            key = generate_key(master)
+            with open(VAULT_FILE, "rb") as f:
+                encrypted_data = f.read()
+            decrypt_data(encrypted_data, key)
+        except Exception:
+            flash("Incorrect master password.", "danger")
+            return render_template('login.html')
+
         update_last_access()
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('verify_2fa'))  # 🔐 go to TOTP
     return render_template('login.html')
+
+
+@app.route('/verify-2fa', methods=['GET', 'POST'])
+def verify_2fa():
+    if 'master' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        code = request.form['code']
+        if verify_totp_code(code, TOTP_SECRET):
+            session['2fa_passed'] = True
+            flash("✅ 2FA Verified!", "success")
+            return redirect(url_for('dashboard'))
+        else:
+            flash("❌ Invalid 2FA code.", "danger")
+
+    return render_template('verify_2fa.html')
+
+@app.route('/qrcode')
+def show_qr():
+    import qrcode
+    import base64
+    from io import BytesIO
+
+    uri = get_provisioning_uri("VaultUser", TOTP_SECRET)
+    img = qrcode.make(uri)
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    qr_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+    return render_template('qrcode.html', qr=qr_b64)
 
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if 'master' not in session:
-            flash("Please log in first.", "warning")
+        if 'master' not in session or not session.get('2fa_passed'):
+            flash("Please log in and verify 2FA.", "warning")
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return wrapper
@@ -56,21 +100,14 @@ def login_required(f):
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    if 'master' not in session:
-        return redirect(url_for('login'))
-
     data = load_vault_data()
     if data is None:
         return redirect(url_for('logout'))
-
     return render_template("dashboard.html", credentials=data)
 
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
 def add():
-    if 'master' not in session:
-        return redirect(url_for('login'))
-
     if request.method == 'POST':
         site = request.form['site']
         username = request.form['username']
@@ -81,15 +118,11 @@ def add():
             return redirect(url_for('logout'))
 
         key = generate_key(session['master'])
-        data[site] = {
-            "username": username,
-            "password": password
-        }
-
+        data[site] = {"username": username, "password": password}
         with open(VAULT_FILE, "wb") as f:
             f.write(encrypt_data(data, key))
 
-        flash(f"Credentials for '{site}' added successfully!", "success")
+        flash(f"Credentials for '{site}' added!", "success")
         return redirect(url_for('dashboard'))
 
     return render_template('add.html')
@@ -97,9 +130,6 @@ def add():
 @app.route('/edit/<site>', methods=['GET', 'POST'])
 @login_required
 def edit(site):
-    if 'master' not in session:
-        return redirect(url_for('login'))
-
     data = load_vault_data()
     if data is None:
         return redirect(url_for('logout'))
@@ -107,11 +137,9 @@ def edit(site):
     key = generate_key(session['master'])
 
     if request.method == 'POST':
-        new_username = request.form['username']
-        new_password = request.form['password']
         data[site] = {
-            "username": new_username,
-            "password": new_password
+            "username": request.form['username'],
+            "password": request.form['password']
         }
         with open(VAULT_FILE, "wb") as f:
             f.write(encrypt_data(data, key))
@@ -128,9 +156,6 @@ def edit(site):
 @app.route('/delete/<site>', methods=['POST'])
 @login_required
 def delete(site):
-    if 'master' not in session:
-        return redirect(url_for('login'))
-
     data = load_vault_data()
     if data is None:
         return redirect(url_for('logout'))
@@ -141,28 +166,21 @@ def delete(site):
         del data[site]
         with open(VAULT_FILE, "wb") as f:
             f.write(encrypt_data(data, key))
-        flash(f"Deleted credentials for {site}.", "info")
+        flash(f"Deleted {site}.", "info")
     else:
-        flash(f"Site '{site}' not found in vault.", "warning")
-
+        flash(f"{site} not found.", "warning")
     return redirect(url_for('dashboard'))
 
 @app.route('/export')
 @login_required
 def export():
-    if 'master' not in session:
-        flash("Please log in first.", "warning")
-        return redirect(url_for('login'))
-
     data = load_vault_data()
     if data is None:
         return redirect(url_for('logout'))
 
     export_content = ""
     for site, creds in data.items():
-        export_content += f"Site: {site}\n"
-        export_content += f"  Username: {creds['username']}\n"
-        export_content += f"  Password: {creds['password']}\n\n"
+        export_content += f"Site: {site}\nUsername: {creds['username']}\nPassword: {creds['password']}\n\n"
 
     return send_file(
         io.BytesIO(export_content.encode('utf-8')),
@@ -171,25 +189,21 @@ def export():
         mimetype='text/plain'
     )
 
-@app.route('/logout')
-def logout():
-    session.pop('master', None)
-    flash("You have been logged out.", "info")
-    return redirect(url_for('login'))
-
 @app.route('/audit')
 @login_required
 def audit():
-    if 'master' not in session:
-        return redirect(url_for('login'))
-
     try:
-        from vault import read_audit_log
         log = read_audit_log()
         return render_template('audit.html', log=log)
     except Exception as e:
         flash(f"Error reading audit log: {e}", "danger")
         return redirect(url_for('dashboard'))
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("Logged out.", "info")
+    return redirect(url_for('login'))
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -201,7 +215,7 @@ def forbidden(e):
 
 @app.errorhandler(500)
 def internal_error(e):
-    flash("An internal error occurred. Please try again.", "danger")
+    flash("An internal error occurred.", "danger")
     return render_template("errors/500.html"), 500
 
 if __name__ == '__main__':
