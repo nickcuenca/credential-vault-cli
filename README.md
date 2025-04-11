@@ -1,4 +1,5 @@
 # 🔐 Credential Vault CLI Tool
+![Python Tests](https://github.com/nickcuenca/credential-vault-cli/actions/workflows/python-tests.yml/badge.svg)
 
 A secure, offline command-line password manager built in Python.  
 Encrypts your credentials using PBKDF2-HMAC-SHA256 with AES-256.  
