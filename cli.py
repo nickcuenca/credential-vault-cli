@@ -1,4 +1,5 @@
 import click
+import traceback
 from vault import generate_key, encrypt_data, is_vault_locked, update_last_access
 
 @click.group()
@@ -69,6 +70,7 @@ def add(master, site, username, password):
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
+        traceback.print_exc()
 
 # ---------------------
 # GET COMMAND
@@ -105,6 +107,7 @@ def get(master, site):
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
+        traceback.print_exc()
 
 # ---------------------
 # LIST COMMAND
@@ -139,6 +142,7 @@ def list(master):
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
+        traceback.print_exc()
 
 # ---------------------
 # DELETE COMMAND
@@ -177,6 +181,7 @@ def delete(master, site):
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
+        traceback.print_exc()
 
 # ---------------------
 # COPY COMMAND
@@ -212,6 +217,7 @@ def copy(master, site):
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
+        traceback.print_exc()
 
 # ---------------------
 # EXPORT COMMAND
@@ -250,6 +256,7 @@ def export(master):
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
+        traceback.print_exc()
 
 # ---------------------
 # GENERATE PASSWORD COMMAND
@@ -319,6 +326,7 @@ def edit(master, site, new_username, new_password):
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
+        traceback.print_exc()
 
 # ---------------------
 # SEARCH COMMAND
@@ -358,6 +366,19 @@ def search(master, query):
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
+        traceback.print_exc()
+
+
+# ---------------------
+# HELP ENTRY
+# ---------------------
+
+@cli.command()
+def help():
+    """Show available commands."""
+    import subprocess
+    subprocess.run(["python", "cli.py", "--help"])
+
 
 # ---------------------
 # MAIN ENTRY

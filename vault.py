@@ -4,12 +4,50 @@ import string
 import time
 import os
 from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
 
-LOCK_TIMEOUT = 300  # 5 minutes in seconds
+# Constants
+LOCK_TIMEOUT = 300  # 5 minutes
 LOCK_FILE = ".last_access"
+SALT_FILE = "salt.bin"
+ITERATIONS = 100_000
+
+# ---------------------
+# Key Derivation
+# ---------------------
+
+def generate_salt():
+    return os.urandom(16)
+
+def load_or_create_salt():
+    if os.path.exists(SALT_FILE):
+        with open(SALT_FILE, "rb") as f:
+            return f.read()
+    else:
+        salt = generate_salt()
+        with open(SALT_FILE, "wb") as f:
+            f.write(salt)
+        return salt
 
 def generate_key(master_password: str) -> bytes:
-    return base64.urlsafe_b64encode(master_password.encode().ljust(32)[:32])
+    """
+    Derives a strong encryption key from the master password using PBKDF2-HMAC-SHA256 and salt.
+    """
+    salt = load_or_create_salt()
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=ITERATIONS,
+        backend=default_backend()
+    )
+    return base64.urlsafe_b64encode(kdf.derive(master_password.encode()))
+
+# ---------------------
+# Encryption Functions
+# ---------------------
 
 def encrypt_data(data: dict, key: bytes) -> bytes:
     f = Fernet(key)
@@ -18,6 +56,10 @@ def encrypt_data(data: dict, key: bytes) -> bytes:
 def decrypt_data(ciphertext: bytes, key: bytes) -> dict:
     f = Fernet(key)
     return json.loads(f.decrypt(ciphertext).decode())
+
+# ---------------------
+# Password Strength Check
+# ---------------------
 
 def check_password_strength(password):
     length = len(password)
@@ -34,6 +76,10 @@ def check_password_strength(password):
         return '🟡 Medium'
     else:
         return '🔴 Weak'
+
+# ---------------------
+# Vault Locking
+# ---------------------
 
 def update_last_access():
     with open(LOCK_FILE, "w") as f:

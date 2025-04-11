@@ -1,13 +1,14 @@
 # 🔐 Credential Vault CLI Tool
 
 A secure, command-line password manager built in Python.  
-Encrypts your credentials with AES-256 using a master password.  
+Encrypts your credentials with AES-256 using a master password (with PBKDF2 salt).  
 Everything is stored offline — no plaintext, no leaks.
 
 ---
 
 ## 💪 Features
 
+- **PBKDF2 + Salt Key Derivation** – Strengthens master password against brute force
 - **Master Password Encryption** – Your vault is protected using AES-256
 - **Add Credentials** – Store site, username, and password securely
 - **Retrieve Credentials** – Get your saved credentials using the `get` command
@@ -107,6 +108,12 @@ python cli.py generate
 python cli.py generate --length 24 --copy
 ```
 
+### Show Available Commands
+
+```bash
+python cli.py help
+```
+
 ---
 
 ## 🧠 Example
@@ -118,18 +125,15 @@ Site: github.com
 Username: nickcuenca
 Password: **************
 ✅ Credentials for 'github.com' added to vault!
-🧠 Password Strength: 🟢 Strong
+🧠 Password Strength: 🟡 Medium
 ```
 
 ```bash
-python cli.py search
+python cli.py list
 Master: **************
-Search query: git
-
-🔍 Matching Results:
-  🌐 Site: github.com
-     👤 Username: nickcuenca
-     🔑 Password: SuperSecret123!
+🔓 Vault unlocked.
+🔐 Stored Sites:
+  - github.com
 ```
 
 ---
@@ -146,6 +150,7 @@ python -m unittest discover tests
 
 - Your master password is **never stored**
 - If you lose the password, **there is no way to recover the data**
+- Encrypted with Fernet/AES and PBKDF2-derived key + salt
 
 ---
 
@@ -156,6 +161,7 @@ python -m unittest discover tests
 | `cli.py` | Command-line interface |
 | `vault.py` | Core encryption + logic |
 | `.last_access` | Tracks session access time |
+| `salt.bin` | Salt used for PBKDF2 key derivation |
 | `vault.json.enc` | Encrypted vault |
 | `tests/` | Unit tests |
 | `.gitignore` | Ensures vault and session files are not committed |
