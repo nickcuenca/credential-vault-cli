@@ -1,27 +1,23 @@
 # 🔐 Credential Vault CLI Tool
 
-A secure, command-line password manager built in Python.  
-Encrypts your credentials with AES-256 using a master password (with PBKDF2 salt).  
-Everything is stored offline — no plaintext, no leaks.
+A secure, offline command-line password manager built in Python.  
+Encrypts your credentials using PBKDF2-HMAC-SHA256 with AES-256.  
+Includes full audit logging, clipboard support, and password strength feedback.
 
 ---
 
 ## 💪 Features
 
-- **PBKDF2 + Salt Key Derivation** – Strengthens master password against brute force
-- **Master Password Encryption** – Your vault is protected using AES-256
-- **Add Credentials** – Store site, username, and password securely
-- **Retrieve Credentials** – Get your saved credentials using the `get` command
-- **Edit Credentials** – Update username or password for an existing entry
-- **Search by Site** – Find credentials with partial site matches
-- **Password Strength Checker** – Feedback on whether a password is 🔴 Weak, 🟡 Medium, or 🟢 Strong
-- **Generate Secure Passwords** – Quickly create strong, random passwords
-- **Copy to Clipboard** – Instantly copy any password for quick access
-- **Export Vault** – Save all credentials into a plaintext file if needed
-- **Lock Timeout** – Auto-locks the vault after 5 minutes of inactivity
-- **Session-Aware Authentication** – Vault remains unlocked temporarily after successful use
-- **Unit Tested** – Includes tests for encryption logic and password strength
-- **Command Line Interface** – Built with `Click` for clean prompts and options
+- **PBKDF2 Key Derivation** – Strong encryption keys derived from your master password + salt
+- **AES-256 Encryption** – Vault data is securely encrypted and stored as a single file
+- **Session Timeout** – Auto-locks after 5 minutes of inactivity
+- **Audit Logging** – Tracks `INIT`, `ADD`, `GET`, `LIST`, `DELETE`, `AUDIT_VIEW`, and failure events
+- **Password Strength Indicator** – 🟢 Strong, 🟡 Medium, 🔴 Weak
+- **Generate Strong Passwords** – Create random secure passwords instantly
+- **Copy to Clipboard** – Quickly copy passwords without displaying them
+- **Export Vault** – Save your vault to plaintext if needed (manual backup)
+- **Search Functionality** – Fuzzy site search for credentials
+- **Command-Line Interface** – Powered by Click for intuitive usage
 
 ---
 
@@ -34,12 +30,14 @@ git clone https://github.com/nickcuenca/credential-vault-cli.git
 cd credential-vault-cli
 ```
 
-### 2. Set up a Virtual Environment
+### 2. Set Up Virtual Environment
 
 ```bash
 python -m venv venv
-.
-env\Scripts ctivate
+venv\Scripts\activate  # Windows
+# or
+source venv/bin/activate  # Mac/Linux
+
 pip install -r requirements.txt
 ```
 
@@ -47,93 +45,54 @@ pip install -r requirements.txt
 
 ## 📦 Usage
 
-### Initialize the Vault
-
+### Initialize Vault
 ```bash
 python cli.py init
 ```
 
 ### Add Credentials
-
 ```bash
 python cli.py add
 ```
 
 ### Retrieve Credentials
-
 ```bash
 python cli.py get
 ```
 
-### Edit Existing Credentials
-
-```bash
-python cli.py edit
-```
-
-### Search Sites by Keyword
-
-```bash
-python cli.py search
-```
-
 ### List Stored Sites
-
 ```bash
 python cli.py list
 ```
 
 ### Delete Credentials
-
 ```bash
 python cli.py delete
 ```
 
-### Copy Password to Clipboard
-
+### Edit Credentials
 ```bash
-python cli.py copy
+python cli.py edit
 ```
 
-### Export Vault to TXT (not encrypted)
+### Search Credentials
+```bash
+python cli.py search
+```
 
+### Export Vault
 ```bash
 python cli.py export
 ```
 
 ### Generate Password
-
 ```bash
-python cli.py generate
 python cli.py generate --length 24 --copy
 ```
 
-### Show Available Commands
-
+### View Audit Log
 ```bash
-python cli.py help
-```
-
----
-
-## 🧠 Example
-
-```bash
-python cli.py add
-Master: **************
-Site: github.com
-Username: nickcuenca
-Password: **************
-✅ Credentials for 'github.com' added to vault!
-🧠 Password Strength: 🟡 Medium
-```
-
-```bash
-python cli.py list
-Master: **************
-🔓 Vault unlocked.
-🔐 Stored Sites:
-  - github.com
+python cli.py audit
 ```
 
 ---
@@ -148,9 +107,10 @@ python -m unittest discover tests
 
 ## 🔐 Security Notes
 
-- Your master password is **never stored**
-- If you lose the password, **there is no way to recover the data**
-- Encrypted with Fernet/AES and PBKDF2-derived key + salt
+- Your **master password is never stored**
+- If you lose your master password, there is **no recovery**
+- Vault is encrypted using a **key derived from PBKDF2 with salt**
+- Everything is stored **offline**, no data ever leaves your machine
 
 ---
 
@@ -158,16 +118,24 @@ python -m unittest discover tests
 
 | File | Description |
 |------|-------------|
-| `cli.py` | Command-line interface |
-| `vault.py` | Core encryption + logic |
-| `.last_access` | Tracks session access time |
-| `salt.bin` | Salt used for PBKDF2 key derivation |
+| `cli.py` | Main command-line tool |
+| `vault.py` | Handles encryption, decryption, strength scoring, and auditing |
+| `audit.log` | Timestamped action log |
 | `vault.json.enc` | Encrypted vault |
-| `tests/` | Unit tests |
-| `.gitignore` | Ensures vault and session files are not committed |
+| `salt.bin` | Cryptographic salt (never share this!) |
+| `.last_access` | Session lock timer |
+| `tests/` | Unit tests for core features |
+| `.gitignore` | Ensures vault + virtual env + salt are not committed |
 
 ---
 
 ## ✨ Credits
 
 Made with 💻 by [Nicolas Cuenca](https://github.com/nickcuenca)
+
+---
+
+## 📌 Disclaimer
+
+This tool is for **personal or educational use only**.  
+Do not use it to manage others' sensitive data.
