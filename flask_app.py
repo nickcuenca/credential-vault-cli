@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash, Response, send_file
 from vault import generate_key, decrypt_data, encrypt_data, update_last_access, is_vault_locked
+from functools import wraps
 import os
 import io
 
@@ -9,18 +10,30 @@ app.secret_key = 'supersecretkey'  # Replace with a secure key in production
 VAULT_FILE = 'vault.json.enc'
 
 def load_vault_data():
-    key = generate_key(session['master'])
+    try:
+        key = generate_key(session['master'])
 
-    with open(VAULT_FILE, "rb") as f:
-        encrypted_data = f.read()
-    data = decrypt_data(encrypted_data, key)
+        with open(VAULT_FILE, "rb") as f:
+            encrypted_data = f.read()
+        data = decrypt_data(encrypted_data, key)
 
-    if is_vault_locked():
-        flash("Vault session expired. Please log in again.", "warning")
+        if is_vault_locked():
+            flash("Vault session expired. Please log in again.", "warning")
+            return None
+
+        update_last_access()
+        return data
+
+    except ValueError:
+        flash("❌ Incorrect master password or corrupted vault.", "danger")
+        session.pop('master', None)
         return None
 
-    update_last_access()
-    return data
+    except Exception as e:
+        flash(f"Unexpected error: {e}", "danger")
+        session.pop('master', None)
+        return None
+
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -31,7 +44,17 @@ def login():
         return redirect(url_for('dashboard'))
     return render_template('login.html')
 
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if 'master' not in session:
+            flash("Please log in first.", "warning")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return wrapper
+
 @app.route('/dashboard')
+@login_required
 def dashboard():
     if 'master' not in session:
         return redirect(url_for('login'))
@@ -43,6 +66,7 @@ def dashboard():
     return render_template("dashboard.html", credentials=data)
 
 @app.route('/add', methods=['GET', 'POST'])
+@login_required
 def add():
     if 'master' not in session:
         return redirect(url_for('login'))
@@ -71,6 +95,7 @@ def add():
     return render_template('add.html')
 
 @app.route('/edit/<site>', methods=['GET', 'POST'])
+@login_required
 def edit(site):
     if 'master' not in session:
         return redirect(url_for('login'))
@@ -101,6 +126,7 @@ def edit(site):
     return render_template('edit.html', site=site, creds=creds)
 
 @app.route('/delete/<site>', methods=['POST'])
+@login_required
 def delete(site):
     if 'master' not in session:
         return redirect(url_for('login'))
@@ -122,8 +148,10 @@ def delete(site):
     return redirect(url_for('dashboard'))
 
 @app.route('/export')
+@login_required
 def export():
     if 'master' not in session:
+        flash("Please log in first.", "warning")
         return redirect(url_for('login'))
 
     data = load_vault_data()
@@ -150,6 +178,7 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/audit')
+@login_required
 def audit():
     if 'master' not in session:
         return redirect(url_for('login'))
@@ -161,6 +190,19 @@ def audit():
     except Exception as e:
         flash(f"Error reading audit log: {e}", "danger")
         return redirect(url_for('dashboard'))
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("errors/404.html"), 404
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template("errors/403.html"), 403
+
+@app.errorhandler(500)
+def internal_error(e):
+    flash("An internal error occurred. Please try again.", "danger")
+    return render_template("errors/500.html"), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

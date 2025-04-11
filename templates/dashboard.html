@@ -1,53 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Vault Dashboard</title>
-    <script>
-        function searchSites() {
-            const query = document.getElementById("search").value.toLowerCase();
-            const entries = document.getElementsByClassName("credential-entry");
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
 
-            for (let entry of entries) {
-                const siteName = entry.getAttribute("data-site").toLowerCase();
-                entry.style.display = siteName.includes(query) ? "block" : "none";
-            }
+{% block content %}
+<h1 class="mb-4">🔐 Your Vault</h1>
+
+<input type="text" id="search" class="form-control mb-3" placeholder="Search site..." onkeyup="searchSites()">
+
+{% if credentials %}
+    <ul class="list-group">
+    {% for site, creds in credentials.items() %}
+        <li class="list-group-item credential-entry" data-site="{{ site }}">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ site }}</strong><br>
+                    👤 {{ creds['username'] }}<br>
+                    🔑 <span id="pw-{{ loop.index }}">{{ creds['password'] }}</span>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('{{ creds['password'] | escape }}')">📋</button>
+                    <a href="{{ url_for('edit', site=site) }}" class="btn btn-sm btn-outline-primary">✏️</a>
+                    <form action="{{ url_for('delete', site=site) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                    </form>
+                </div>
+            </div>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p class="text-muted">No credentials saved yet.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function searchSites() {
+        const query = document.getElementById("search").value.toLowerCase();
+        const entries = document.getElementsByClassName("credential-entry");
+
+        for (let entry of entries) {
+            const siteName = entry.getAttribute("data-site").toLowerCase();
+            entry.style.display = siteName.includes(query) ? "block" : "none";
         }
+    }
 
-        function copyToClipboard(password) {
-            navigator.clipboard.writeText(password).then(() => {
-                alert("🔑 Password copied to clipboard!");
-            });
-        }
-    </script>
-</head>
-<body>
-    <h1>🔐 Your Vault</h1>
-
-    <input type="text" id="search" placeholder="Search site..." onkeyup="searchSites()">
-    <br><br>
-
-    <a href="{{ url_for('add') }}">➕ Add Credential</a>
-    <a href="{{ url_for('export') }}">📦 Export</a>
-    <a href="{{ url_for('audit') }}">📖 Audit Log</a>
-    <a href="{{ url_for('logout') }}">🚪 Logout</a>
-
-    {% if credentials %}
-        <ul>
-        {% for site, creds in credentials.items() %}
-            <li class="credential-entry" data-site="{{ site }}">
-                <strong>{{ site }}</strong><br>
-                👤 {{ creds['username'] }}<br>
-                🔑 <span id="pw-{{ loop.index }}">{{ creds['password'] }}</span>
-                <button onclick="copyToClipboard('{{ creds['password'] | escape }}')">📋 Copy</button>
-                <form action="{{ url_for('delete', site=site) }}" method="POST" style="display:inline;">
-                    <button type="submit">🗑️ Delete</button>
-                </form>
-                <a href="{{ url_for('edit', site=site) }}">✏️ Edit</a>
-            </li>
-        {% endfor %}
-        </ul>
-    {% else %}
-        <p>No credentials saved yet.</p>
-    {% endif %}
-</body>
-</html>
+    function copyToClipboard(password) {
+        navigator.clipboard.writeText(password).then(() => {
+            alert("🔑 Password copied to clipboard!");
+        });
+    }
+</script>
+{% endblock %}

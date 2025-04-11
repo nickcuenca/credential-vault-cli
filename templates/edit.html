@@ -1,20 +1,49 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Credentials</title>
-</head>
-<body>
-    <h1>✏️ Edit Credentials for {{ site }}</h1>
+{% extends "base.html" %}
+{% block title %}Edit Credentials{% endblock %}
 
-    <form method="POST">
-        <label>Username:</label><br>
-        <input type="text" name="username" value="{{ creds['username'] }}" required><br><br>
+{% block content %}
+<h2 class="mb-4">✏️ Edit Credentials for <strong>{{ site }}</strong></h2>
 
-        <label>Password:</label><br>
-        <input type="text" name="password" value="{{ creds['password'] }}" required><br><br>
+<form method="POST" class="mb-4">
+    <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" value="{{ creds['username'] }}" required>
+    </div>
 
-        <button type="submit">💾 Save Changes</button>
-        <a href="{{ url_for('dashboard') }}">🔙 Back</a>
-    </form>
-</body>
-</html>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" id="passwordInput" class="form-control" value="{{ creds['password'] }}" required oninput="updateStrength()">
+        <div id="strengthFeedback" class="form-text mt-1"></div>
+    </div>
+
+    <button type="submit" class="btn btn-success">💾 Save Changes</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary ms-2">🔙 Back</a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateStrength() {
+    const pw = document.getElementById("passwordInput").value;
+    const feedback = document.getElementById("strengthFeedback");
+
+    let score = 0;
+    if (pw.length >= 12) score++;
+    if (/[a-z]/.test(pw)) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/\d/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+    if (score >= 5) {
+        feedback.innerText = "🟢 Strong password";
+        feedback.style.color = "green";
+    } else if (score >= 3) {
+        feedback.innerText = "🟡 Medium password";
+        feedback.style.color = "orange";
+    } else {
+        feedback.innerText = "🔴 Weak password";
+        feedback.style.color = "red";
+    }
+}
+</script>
+{% endblock %}

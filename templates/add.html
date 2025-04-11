@@ -1,33 +1,65 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Add Credentials</title>
-</head>
-<body>
-    <h2>➕ Add New Credentials</h2>
+{% extends "base.html" %}
+{% block title %}Add Credential{% endblock %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <p style="color: red;">{{ message }}</p>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+{% block content %}
+<h2 class="mb-4">➕ Add New Credentials</h2>
 
-    <form method="POST">
-        <label>Site:</label><br>
-        <input type="text" name="site" required><br><br>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
-        <label>Username:</label><br>
-        <input type="text" name="username" required><br><br>
+<form method="POST" class="mb-4">
+    <div class="mb-3">
+        <label class="form-label">Site</label>
+        <input type="text" name="site" class="form-control" required>
+    </div>
 
-        <label>Password:</label><br>
-        <input type="password" name="password" required><br><br>
+    <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" required>
+    </div>
 
-        <button type="submit">Add</button>
-    </form>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" id="passwordInput" class="form-control" required oninput="updateStrength()">
+        <div id="strengthFeedback" class="form-text mt-1"></div>
+    </div>
 
-    <br>
-    <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
-</body>
-</html>
+    <button type="submit" class="btn btn-primary">Add</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary ms-2">← Back to Dashboard</a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateStrength() {
+    const pw = document.getElementById("passwordInput").value;
+    const feedback = document.getElementById("strengthFeedback");
+
+    let score = 0;
+    if (pw.length >= 12) score++;
+    if (/[a-z]/.test(pw)) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/\d/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+    if (score >= 5) {
+        feedback.innerText = "🟢 Strong password";
+        feedback.style.color = "green";
+    } else if (score >= 3) {
+        feedback.innerText = "🟡 Medium password";
+        feedback.style.color = "orange";
+    } else {
+        feedback.innerText = "🔴 Weak password";
+        feedback.style.color = "red";
+    }
+}
+</script>
+{% endblock %}

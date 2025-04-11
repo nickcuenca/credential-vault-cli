@@ -1,67 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Audit Log</title>
-</head>
-<body>
-    <h1>📖 Vault Audit Log</h1>
+{% extends "base.html" %}
+{% block title %}Audit Log{% endblock %}
 
-    <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
-    <br><br>
+{% block content %}
+<h2 class="mb-4">📖 Vault Audit Log</h2>
 
-    <pre style="white-space: pre-wrap; background-color: #f4f4f4; padding: 1em; border: 1px solid #ccc;">
+<a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+
+<pre style="white-space: pre-wrap; background-color: #f8f9fa; padding: 1.25rem; border: 1px solid #dee2e6; border-radius: .25rem; font-family: monospace;">
 {{ log }}
-    </pre>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Add Credentials</title>
-    <script>
-        function evaluateStrength(password) {
-            let score = 0;
-            if (password.length >= 8) score++;
-            if (/[A-Z]/.test(password)) score++;
-            if (/[a-z]/.test(password)) score++;
-            if (/[0-9]/.test(password)) score++;
-            if (/[^A-Za-z0-9]/.test(password)) score++;
-
-            let strength = "🔴 Weak";
-            if (score >= 4) strength = "🟡 Medium";
-            if (score === 5) strength = "🟢 Strong";
-
-            document.getElementById("strength").innerText = strength;
-        }
-    </script>
-</head>
-<body>
-    <h2>➕ Add New Credentials</h2>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <p style="color: red;">{{ message }}</p>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <form method="POST">
-        <label>Site:</label><br>
-        <input type="text" name="site" required><br><br>
-
-        <label>Username:</label><br>
-        <input type="text" name="username" required><br><br>
-
-        <label>Password:</label><br>
-        <input type="password" name="password" oninput="evaluateStrength(this.value)" required><br>
-        <small>Password Strength: <span id="strength">🔴 Weak</span></small><br><br>
-
-        <button type="submit">Add</button>
-    </form>
-
-    <br>
-    <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
-</body>
-</html>
+</pre>
+{% endblock %}
