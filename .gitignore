@@ -7,3 +7,4 @@ vault_export.txt
 *.txt
 .last_access
 salt.bin
+vault_audit.log

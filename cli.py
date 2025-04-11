@@ -1,6 +1,7 @@
 import click
 import traceback
 from vault import generate_key, encrypt_data, is_vault_locked, update_last_access
+from audit import log_action
 
 @click.group()
 def cli():
@@ -19,6 +20,7 @@ def init(master):
     if os.path.exists("vault.json.enc"):
         update_last_access()
         click.echo("✅ Vault already exists. Session refreshed.")
+        log_action("INIT", status="REFRESHED", note="Vault already existed")
         return
 
     key = generate_key(master)
@@ -29,6 +31,7 @@ def init(master):
 
     update_last_access()
     click.echo("🔐 Vault initialized and encrypted!")
+    log_action("INIT", status="SUCCESS")
 
 # ---------------------
 # ADD COMMAND
@@ -67,10 +70,12 @@ def add(master, site, username, password):
         click.echo(f"✅ Credentials for '{site}' added to vault!")
         click.echo(f"🧠 Password Strength: {strength}")
         update_last_access()
+        log_action("ADD", site=site)
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
         traceback.print_exc()
+        log_action("ADD", site=site, status="FAILURE", note=str(e))
 
 # ---------------------
 # GET COMMAND
@@ -97,6 +102,7 @@ def get(master, site):
 
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
+            log_action("GET", site=site, status="FAILURE", note="Site not found")
             return
 
         creds = data[site]
@@ -104,10 +110,12 @@ def get(master, site):
         click.echo(f"  👤 Username: {creds['username']}")
         click.echo(f"  🔑 Password: {creds['password']}")
         update_last_access()
+        log_action("GET", site=site)
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
         traceback.print_exc()
+        log_action("GET", site=site, status="FAILURE", note=str(e))
 
 # ---------------------
 # LIST COMMAND
@@ -138,11 +146,13 @@ def list(master):
         click.echo("🔐 Stored Sites:")
         for site in data:
             click.echo(f"  - {site}")
+        log_action("LIST")
         update_last_access()
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
         traceback.print_exc()
+        log_action("LIST", status="FAILURE", note=str(e))
 
 # ---------------------
 # DELETE COMMAND
@@ -169,6 +179,7 @@ def delete(master, site):
 
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
+            log_action("DELETE", site=site, status="FAILURE", note="Site not found")
             return
 
         del data[site]
@@ -178,10 +189,12 @@ def delete(master, site):
 
         click.echo(f"🗑️ Credentials for '{site}' deleted from vault.")
         update_last_access()
+        log_action("DELETE", site=site)
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
         traceback.print_exc()
+        log_action("DELETE", site=site, status="FAILURE", note=str(e))
 
 # ---------------------
 # COPY COMMAND
@@ -209,15 +222,18 @@ def copy(master, site):
 
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
+            log_action("COPY", site=site, status="FAILURE", note="Site not found")
             return
 
         pyperclip.copy(data[site]["password"])
         click.echo(f"📋 Password for '{site}' copied to clipboard!")
         update_last_access()
+        log_action("COPY", site=site)
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
         traceback.print_exc()
+        log_action("COPY", site=site, status="FAILURE", note=str(e))
 
 # ---------------------
 # EXPORT COMMAND
@@ -243,6 +259,7 @@ def export(master):
 
         if not data:
             click.echo("⚠️ Vault is empty. Nothing to export.")
+            log_action("EXPORT", status="SKIPPED", note="Vault was empty")
             return
 
         with open("vault_export.txt", "w", encoding="utf-8") as f:
@@ -253,10 +270,12 @@ def export(master):
 
         click.echo("✅ Vault successfully exported to 'vault_export.txt'.")
         update_last_access()
+        log_action("EXPORT")
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
         traceback.print_exc()
+        log_action("EXPORT", status="FAILURE", note=str(e))
 
 # ---------------------
 # GENERATE PASSWORD COMMAND
@@ -280,6 +299,8 @@ def generate(length, copy):
     if copy:
         pyperclip.copy(password)
         click.echo("📋 Password copied to clipboard!")
+    
+    log_action("GENERATE", note=f"Length={length}")
 
 # ---------------------
 # EDIT COMMAND
@@ -308,6 +329,7 @@ def edit(master, site, new_username, new_password):
 
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
+            log_action("EDIT", site=site, status="FAILURE", note="Site not found")
             return
 
         if new_username:
@@ -323,10 +345,12 @@ def edit(master, site, new_username, new_password):
 
         click.echo(f"✏️ Credentials for '{site}' updated.")
         update_last_access()
+        log_action("EDIT", site=site)
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
         traceback.print_exc()
+        log_action("EDIT", site=site, status="FAILURE", note=str(e))
 
 # ---------------------
 # SEARCH COMMAND
@@ -356,6 +380,7 @@ def search(master, query):
         matches = {site: creds for site, creds in data.items() if query.lower() in site.lower()}
         if not matches:
             click.echo("🔎 No matches found.")
+            log_action("SEARCH", note=query, status="SKIPPED", note="No matches found")
             return
 
         click.echo("🔍 Matching Results:")
@@ -363,10 +388,12 @@ def search(master, query):
             click.echo(f"  🌐 Site: {site}")
             click.echo(f"     👤 Username: {creds['username']}")
             click.echo(f"     🔑 Password: {creds['password']}\n")
+        log_action("SEARCH", note=query)
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
         traceback.print_exc()
+        log_action("SEARCH", note=query, status="FAILURE", note=str(e))
 
 
 # ---------------------
@@ -379,6 +406,16 @@ def help():
     import subprocess
     subprocess.run(["python", "cli.py", "--help"])
 
+# ---------------------
+# AUDIT LOG VIEW COMMAND
+# ---------------------
+@cli.command()
+def audit():
+    """View the audit log."""
+    from vault import read_audit_log
+    log_action("AUDIT_VIEW")
+    click.echo("📜 Audit Log:\n")
+    click.echo(read_audit_log())
 
 # ---------------------
 # MAIN ENTRY
