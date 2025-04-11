@@ -1,11 +1,10 @@
 # 🔐 Credential Vault CLI + Flask GUI
 ![Python Tests](https://github.com/nickcuenca/credential-vault-cli/actions/workflows/python-tests.yml/badge.svg)
-![Build](https://github.com/nickcuenca/credential-vault-cli/actions/workflows/python-tests.yml/badge.svg)
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![License](https://img.shields.io/github/license/nickcuenca/credential-vault-cli)
-![Framework](https://img.shields.io/badge/Flask-Web_App_Framework-red)
-![Offline](https://img.shields.io/badge/Secure-Offline-brightgreen)
 [![codecov](https://codecov.io/gh/nickcuenca/credential-vault-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/nickcuenca/credential-vault-cli)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Flask](https://img.shields.io/badge/Flask-Web_App_Framework-red)
+![Offline](https://img.shields.io/badge/Secure-Offline-brightgreen)
+![License](https://img.shields.io/github/license/nickcuenca/credential-vault-cli)
 
 A secure, offline password manager with a sleek Bootstrap-powered web interface.  
 Supports AES-256 encryption, audit logging, clipboard copy, password strength scoring, and more.
@@ -44,6 +43,10 @@ python flask_app.py
 
 ```bash
 python -m unittest discover tests
+
+# Run with coverage
+coverage run -m unittest discover
+coverage report
 ```
 
 ---
@@ -65,10 +68,10 @@ python -m unittest discover tests
 
 ## 🔐 Security
 
-- Your **master password is never stored**
-- Vault uses **PBKDF2-HMAC-SHA256** with **AES-256**
-- Session timeout: 5 min inactivity = auto-lock
-- Everything stored **offline**, nothing leaves your machine
+- 🔐 **Master password is never stored**
+- 🔑 **AES-256 encryption** via PBKDF2-HMAC-SHA256
+- ⏱️ Auto-lock after 5 minutes of inactivity
+- 📡 Fully offline — zero internet transmission
 
 ---
 
@@ -83,3 +86,5 @@ Made for SWE / IT / Cyber / Air Force 17X prep 🌍
 
 This tool is for **educational and personal use only.**  
 Do not use for managing sensitive real-world passwords.
+
+> 📊 Code coverage tracked live with [Codecov](https://app.codecov.io/gh/nickcuenca/credential-vault-cli). Current coverage: **79%** and rising.
