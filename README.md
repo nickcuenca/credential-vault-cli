@@ -1,5 +1,11 @@
 # 🔐 Credential Vault CLI + Flask GUI
 ![Python Tests](https://github.com/nickcuenca/credential-vault-cli/actions/workflows/python-tests.yml/badge.svg)
+![Build](https://github.com/nickcuenca/credential-vault-cli/actions/workflows/python-tests.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![License](https://img.shields.io/github/license/nickcuenca/credential-vault-cli)
+![Framework](https://img.shields.io/badge/Flask-Web_App_Framework-red)
+![Offline](https://img.shields.io/badge/Secure-Offline-brightgreen)
+[![codecov](https://codecov.io/gh/nickcuenca/credential-vault-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/nickcuenca/credential-vault-cli)
 
 A secure, offline password manager with a sleek Bootstrap-powered web interface.  
 Supports AES-256 encryption, audit logging, clipboard copy, password strength scoring, and more.
