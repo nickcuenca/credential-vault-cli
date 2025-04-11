@@ -8,7 +8,6 @@ from cryptography.fernet import Fernet
 LOCK_TIMEOUT = 300  # 5 minutes in seconds
 LOCK_FILE = ".last_access"
 
-
 def generate_key(master_password: str) -> bytes:
     return base64.urlsafe_b64encode(master_password.encode().ljust(32)[:32])
 
@@ -21,10 +20,6 @@ def decrypt_data(ciphertext: bytes, key: bytes) -> dict:
     return json.loads(f.decrypt(ciphertext).decode())
 
 def check_password_strength(password):
-    """
-    Evaluates password strength based on character types and length.
-    Returns one of: 'Weak', 'Medium', 'Strong'
-    """
     length = len(password)
     has_lower = any(c.islower() for c in password)
     has_upper = any(c.isupper() for c in password)

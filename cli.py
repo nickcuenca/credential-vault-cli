@@ -1,9 +1,9 @@
 import click
 from vault import generate_key, encrypt_data, is_vault_locked, update_last_access
 
-# Define a group of CLI commands (init, add, get, etc.)
 @click.group()
 def cli():
+    """Credential Vault CLI - Securely store, retrieve, and manage your passwords."""
     pass
 
 # ---------------------
@@ -12,9 +12,14 @@ def cli():
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 def init(master):
-    """
-    Initializes a new encrypted credential vault.
-    """
+    """Initialize a new encrypted credential vault."""
+    import os
+
+    if os.path.exists("vault.json.enc"):
+        update_last_access()
+        click.echo("✅ Vault already exists. Session refreshed.")
+        return
+
     key = generate_key(master)
     encrypted = encrypt_data({}, key)
 
@@ -23,7 +28,6 @@ def init(master):
 
     update_last_access()
     click.echo("🔐 Vault initialized and encrypted!")
-
 
 # ---------------------
 # ADD COMMAND
@@ -34,26 +38,21 @@ def init(master):
 @click.option('--username', prompt="Username")
 @click.option('--password', prompt="Password", hide_input=True, confirmation_prompt=True)
 def add(master, site, username, password):
-    """
-    Adds credentials for a given site to the encrypted vault.
-    """
-    from vault import generate_key, encrypt_data, decrypt_data, check_password_strength
+    """Add new credentials for a website to your encrypted vault."""
+    from vault import encrypt_data, decrypt_data, check_password_strength
     import os
-
-    if is_vault_locked():
-        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
-        return
 
     key = generate_key(master)
 
     try:
-        if not os.path.exists("vault.json.enc"):
-            click.echo("❌ Vault not initialized. Run `init` first.")
-            return
-
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
+
+        if is_vault_locked():
+            click.echo("🔒 Vault session expired. Session refreshed.")
+        else:
+            click.echo("🔓 Vault unlocked.")
 
         data[site] = {
             "username": username,
@@ -71,7 +70,6 @@ def add(master, site, username, password):
     except Exception as e:
         click.echo(f"❌ Error: {e}")
 
-
 # ---------------------
 # GET COMMAND
 # ---------------------
@@ -79,26 +77,21 @@ def add(master, site, username, password):
 @click.option('--master', prompt=True, hide_input=True)
 @click.option('--site', prompt="Site")
 def get(master, site):
-    """
-    Retrieves and displays credentials for a given site.
-    """
-    from vault import generate_key, decrypt_data
+    """Retrieve credentials for a given site."""
+    from vault import decrypt_data
     import os
-
-    if is_vault_locked():
-        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
-        return
 
     key = generate_key(master)
 
     try:
-        if not os.path.exists("vault.json.enc"):
-            click.echo("❌ Vault not initialized. Run `init` first.")
-            return
-
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
+
+        if is_vault_locked():
+            click.echo("🔒 Vault session expired. Session refreshed.")
+        else:
+            click.echo("🔓 Vault unlocked.")
 
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
@@ -113,33 +106,27 @@ def get(master, site):
     except Exception as e:
         click.echo(f"❌ Error: {e}")
 
-
 # ---------------------
 # LIST COMMAND
 # ---------------------
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 def list(master):
-    """
-    Lists all saved site names.
-    """
-    from vault import generate_key, decrypt_data
+    """List all stored sites in your vault."""
+    from vault import decrypt_data
     import os
-
-    if is_vault_locked():
-        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
-        return
 
     key = generate_key(master)
 
     try:
-        if not os.path.exists("vault.json.enc"):
-            click.echo("❌ Vault not initialized. Run `init` first.")
-            return
-
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
+
+        if is_vault_locked():
+            click.echo("🔒 Vault session expired. Session refreshed.")
+        else:
+            click.echo("🔓 Vault unlocked.")
 
         if not data:
             click.echo("⚠️ Vault is empty. Add some credentials with `add`.")
@@ -153,7 +140,6 @@ def list(master):
     except Exception as e:
         click.echo(f"❌ Error: {e}")
 
-
 # ---------------------
 # DELETE COMMAND
 # ---------------------
@@ -161,26 +147,21 @@ def list(master):
 @click.option('--master', prompt=True, hide_input=True)
 @click.option('--site', prompt="Site")
 def delete(master, site):
-    """
-    Deletes credentials for a given site from the vault.
-    """
-    from vault import generate_key, encrypt_data, decrypt_data
+    """Delete credentials for a given site."""
+    from vault import encrypt_data, decrypt_data
     import os
-
-    if is_vault_locked():
-        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
-        return
 
     key = generate_key(master)
 
     try:
-        if not os.path.exists("vault.json.enc"):
-            click.echo("❌ Vault not initialized. Run `init` first.")
-            return
-
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
+
+        if is_vault_locked():
+            click.echo("🔒 Vault session expired. Session refreshed.")
+        else:
+            click.echo("🔓 Vault unlocked.")
 
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
@@ -197,7 +178,6 @@ def delete(master, site):
     except Exception as e:
         click.echo(f"❌ Error: {e}")
 
-
 # ---------------------
 # COPY COMMAND
 # ---------------------
@@ -205,27 +185,22 @@ def delete(master, site):
 @click.option('--master', prompt=True, hide_input=True)
 @click.option('--site', prompt="Site")
 def copy(master, site):
-    """
-    Copies the password for a given site to clipboard.
-    """
-    from vault import generate_key, decrypt_data
+    """Copy a password to the clipboard for a given site."""
+    from vault import decrypt_data
     import pyperclip
     import os
-
-    if is_vault_locked():
-        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
-        return
 
     key = generate_key(master)
 
     try:
-        if not os.path.exists("vault.json.enc"):
-            click.echo("❌ Vault not initialized. Run `init` first.")
-            return
-
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
+
+        if is_vault_locked():
+            click.echo("🔒 Vault session expired. Session refreshed.")
+        else:
+            click.echo("🔓 Vault unlocked.")
 
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
@@ -238,33 +213,27 @@ def copy(master, site):
     except Exception as e:
         click.echo(f"❌ Error: {e}")
 
-
 # ---------------------
 # EXPORT COMMAND
 # ---------------------
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 def export(master):
-    """
-    Exports all credentials to a plaintext file.
-    """
-    from vault import generate_key, decrypt_data
+    """Export all credentials to a plaintext file."""
+    from vault import decrypt_data
     import os
-
-    if is_vault_locked():
-        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
-        return
 
     key = generate_key(master)
 
     try:
-        if not os.path.exists("vault.json.enc"):
-            click.echo("❌ Vault not initialized. Run `init` first.")
-            return
-
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
+
+        if is_vault_locked():
+            click.echo("🔒 Vault session expired. Session refreshed.")
+        else:
+            click.echo("🔓 Vault unlocked.")
 
         if not data:
             click.echo("⚠️ Vault is empty. Nothing to export.")
@@ -282,17 +251,14 @@ def export(master):
     except Exception as e:
         click.echo(f"❌ Error: {e}")
 
-
 # ---------------------
-# GENERATE COMMAND
+# GENERATE PASSWORD COMMAND
 # ---------------------
 @cli.command()
-@click.option('--length', default=16, prompt="Password Length", help="Length of the generated password")
-@click.option('--copy', is_flag=True, help="Copy generated password to clipboard")
+@click.option('--length', default=16, prompt="Password Length")
+@click.option('--copy', is_flag=True, help="Copy password to clipboard")
 def generate(length, copy):
-    """
-    Generates a secure password and optionally copies it.
-    """
+    """Generate a secure random password."""
     import string
     import secrets
     import pyperclip
@@ -314,29 +280,24 @@ def generate(length, copy):
 @cli.command()
 @click.option('--master', prompt=True, hide_input=True)
 @click.option('--site', prompt="Site")
-@click.option('--new_username', prompt="New Username (press Enter to skip)", default="", show_default=False)
-@click.option('--new_password', prompt="New Password (press Enter to skip)", hide_input=True, confirmation_prompt=True, default="", show_default=False)
+@click.option('--new_username', prompt="New Username", default="", show_default=False)
+@click.option('--new_password', prompt="New Password", hide_input=True, confirmation_prompt=True, default="", show_default=False)
 def edit(master, site, new_username, new_password):
-    """
-    Edits the username and/or password for a given site.
-    """
-    from vault import generate_key, encrypt_data, decrypt_data, check_password_strength
+    """Edit credentials for a site."""
+    from vault import encrypt_data, decrypt_data, check_password_strength
     import os
-
-    if is_vault_locked():
-        click.echo("🔒 Vault session expired. Please re-enter or re-initialize.")
-        return
 
     key = generate_key(master)
 
     try:
-        if not os.path.exists("vault.json.enc"):
-            click.echo("❌ Vault not initialized. Run `init` first.")
-            return
-
         with open("vault.json.enc", "rb") as f:
             encrypted_data = f.read()
         data = decrypt_data(encrypted_data, key)
+
+        if is_vault_locked():
+            click.echo("🔒 Vault session expired. Session refreshed.")
+        else:
+            click.echo("🔓 Vault unlocked.")
 
         if site not in data:
             click.echo(f"❌ No credentials found for '{site}'.")
@@ -353,14 +314,53 @@ def edit(master, site, new_username, new_password):
         with open("vault.json.enc", "wb") as f:
             f.write(encrypt_data(data, key))
 
-        click.echo(f"✏️ Credentials for '{site}' successfully updated.")
+        click.echo(f"✏️ Credentials for '{site}' updated.")
         update_last_access()
 
     except Exception as e:
         click.echo(f"❌ Error: {e}")
 
 # ---------------------
-# MAIN ENTRY POINT
+# SEARCH COMMAND
+# ---------------------
+@cli.command()
+@click.option('--master', prompt=True, hide_input=True)
+@click.option('--query', prompt="Search query")
+def search(master, query):
+    """Search for sites in the vault matching a query."""
+    from vault import decrypt_data
+    import os
+
+    key = generate_key(master)
+
+    try:
+        with open("vault.json.enc", "rb") as f:
+            encrypted_data = f.read()
+        data = decrypt_data(encrypted_data, key)
+
+        if is_vault_locked():
+            click.echo("🔒 Vault session expired. Session refreshed.")
+        else:
+            click.echo("🔓 Vault unlocked.")
+
+        update_last_access()
+
+        matches = {site: creds for site, creds in data.items() if query.lower() in site.lower()}
+        if not matches:
+            click.echo("🔎 No matches found.")
+            return
+
+        click.echo("🔍 Matching Results:")
+        for site, creds in matches.items():
+            click.echo(f"  🌐 Site: {site}")
+            click.echo(f"     👤 Username: {creds['username']}")
+            click.echo(f"     🔑 Password: {creds['password']}\n")
+
+    except Exception as e:
+        click.echo(f"❌ Error: {e}")
+
+# ---------------------
+# MAIN ENTRY
 # ---------------------
 if __name__ == '__main__':
     cli()
