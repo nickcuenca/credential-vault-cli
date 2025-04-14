@@ -87,4 +87,4 @@ Made for SWE / IT / Cyber / Air Force 17X prep 🌍
 This tool is for **educational and personal use only.**  
 Do not use for managing sensitive real-world passwords.
 
-> 📊 Code coverage tracked live with [Codecov](https://app.codecov.io/gh/nickcuenca/credential-vault-cli). Current coverage: **79%** and rising.
+> 📊 Code coverage tracked live with [Codecov](https://app.codecov.io/gh/nickcuenca/credential-vault-cli). Current coverage: **92%** and rising.
