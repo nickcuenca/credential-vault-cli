@@ -24,6 +24,10 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">🔓 Unlock Vault</button>
         </form>
+
+        <form method="POST" action="{{ url_for('force_reset') }}" onsubmit="return confirm('This will permanently delete the vault. Are you sure?')">
+            <button type="submit" class="btn btn-outline-danger w-100 mt-3">🗑️ Reset Vault</button>
+        </form>
     </div>
 </div>
 {% endblock %}

@@ -246,6 +246,18 @@ def export():
         mimetype='text/plain'
     )
 
+@app.route('/force-reset', methods=['POST'])
+def force_reset():
+    try:
+        for file in ['vault.json.enc', 'vault_audit.log', 'salt.bin']:
+            if os.path.exists(file):
+                os.remove(file)
+        flash("🔁 Vault has been reset. You can now set a new master password.", "info")
+    except Exception as e:
+        flash(f"❌ Error resetting vault: {e}", "danger")
+    return redirect(url_for('login'))
+
+
 @app.route('/audit')
 @login_required
 def audit():
