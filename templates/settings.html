@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">⚙️ Vault Settings</h2>
+
+<form method="POST" action="{{ url_for('reset_vault') }}" onsubmit="return confirm('Are you sure? This will delete everything!')">
+    <button class="btn btn-danger">🧨 Reset Vault</button>
+</form>
+<br>
+
+<form method="POST" action="{{ url_for('rotate_key') }}">
+    <div class="mb-3">
+        <label for="current" class="form-label">Current Master Password</label>
+        <input type="password" name="current" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="new" class="form-label">New Master Password</label>
+        <input type="password" name="new" class="form-control" required>
+    </div>
+    <button class="btn btn-primary">🔁 Rotate Encryption Key</button>
+</form>
+{% endblock %}

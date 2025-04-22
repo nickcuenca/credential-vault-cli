@@ -13,6 +13,15 @@ app.secret_key = 'supersecretkey'  # Replace in production
 VAULT_FILE = 'vault.json.enc'
 TOTP_SECRET = get_or_create_totp_secret()
 
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if 'master' not in session or not session.get('2fa_passed'):
+            flash("Please log in and verify 2FA.", "warning")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return wrapper
+    
 def load_vault_data():
     try:
         key = generate_key(session['master'])
@@ -57,6 +66,51 @@ def login():
         return redirect(url_for('verify_2fa'))  # 🔐 go to TOTP
     return render_template('login.html')
 
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('settings.html')
+
+
+@app.route('/reset-vault', methods=['POST'])
+@login_required
+def reset_vault():
+    try:
+        for file in ['vault.json.enc', 'vault_audit.log', 'salt.bin']:
+            if os.path.exists(file):
+                os.remove(file)
+        flash("✅ Vault and logs deleted successfully.", "success")
+    except Exception as e:
+        flash(f"❌ Error resetting vault: {e}", "danger")
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/rotate-key', methods=['POST'])
+@login_required
+def rotate_key():
+    current = request.form['current']
+    new = request.form['new']
+
+    try:
+        old_key = generate_key(current)
+        with open(VAULT_FILE, "rb") as f:
+            encrypted_data = f.read()
+        data = decrypt_data(encrypted_data, old_key)
+
+        # Overwrite salt and re-derive key from new password
+        if os.path.exists("salt.bin"):
+            os.remove("salt.bin")
+        new_key = generate_key(new)
+
+        with open(VAULT_FILE, "wb") as f:
+            f.write(encrypt_data(data, new_key))
+
+        session['master'] = new
+        flash("🔐 Master password and key updated successfully.", "success")
+    except Exception as e:
+        flash(f"❌ Key rotation failed: {e}", "danger")
+
+    return redirect(url_for('settings'))
 
 @app.route('/verify-2fa', methods=['GET', 'POST'])
 def verify_2fa():
@@ -88,14 +142,6 @@ def show_qr():
 
     return render_template('qrcode.html', qr=qr_b64)
 
-def login_required(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if 'master' not in session or not session.get('2fa_passed'):
-            flash("Please log in and verify 2FA.", "warning")
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return wrapper
 
 @app.route('/dashboard')
 @login_required
