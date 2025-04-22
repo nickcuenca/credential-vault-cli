@@ -51,10 +51,20 @@ def login():
     if request.method == 'POST':
         master = request.form['master']
         session['master'] = master
+        key = generate_key(master)
 
-        # Validate password right away
+        # Check if vault exists
+        if not os.path.exists(VAULT_FILE):
+            # Initialize empty vault
+            empty_vault = {}
+            with open(VAULT_FILE, "wb") as f:
+                f.write(encrypt_data(empty_vault, key))
+            flash("🔐 Vault created. You can now start adding credentials.", "info")
+            update_last_access()
+            return redirect(url_for('verify_2fa'))
+
+        # Otherwise try to decrypt
         try:
-            key = generate_key(master)
             with open(VAULT_FILE, "rb") as f:
                 encrypted_data = f.read()
             decrypt_data(encrypted_data, key)
@@ -63,7 +73,8 @@ def login():
             return render_template('login.html')
 
         update_last_access()
-        return redirect(url_for('verify_2fa'))  # 🔐 go to TOTP
+        return redirect(url_for('verify_2fa'))
+
     return render_template('login.html')
 
 @app.route('/settings')
