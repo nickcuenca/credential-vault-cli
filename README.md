@@ -23,6 +23,9 @@ Supports AES-256 encryption, audit logging, clipboard copy, password strength sc
 - **Session Timeout Auto-lock**
 - **Export Vault as TXT**
 - **404 Error Handling + Clean Routing**
+- **Public Reset Feature for Shared Vaults**
+- **QR-based TOTP 2FA Setup**
+- **Live Deployment on Render**
 
 ---
 
