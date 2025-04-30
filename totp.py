@@ -15,7 +15,7 @@ def get_or_create_totp_secret():
 
 def verify_totp_code(code, secret):
     totp = pyotp.TOTP(secret)
-    return totp.verify(code)
+    return totp.verify(code, valid_window=1)  # ⬅️ allows ±30 seconds
 
 def get_provisioning_uri(account_name="VaultApp", issuer="Credential Vault CLI", secret=None):
     if not secret:

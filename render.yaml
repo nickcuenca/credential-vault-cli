@@ -2,11 +2,11 @@ services:
   - type: web
     name: credential-vault
     env: python
+    plan: free
     buildCommand: ""
     startCommand: gunicorn flask_app:app
-    plan: free
     envVars:
       - key: FLASK_ENV
         value: production
-      - key: SECRET_KEY
+      - key: FLASK_SECRET_KEY
         value: your-secret-key-here

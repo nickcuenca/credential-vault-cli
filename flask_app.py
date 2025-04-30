@@ -7,20 +7,28 @@ import os
 import io
 import qrcode
 import base64
+import bcrypt
+from datetime import timedelta
+
 
 import time, pyotp          # add to the imports at top
 
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
-app.secret_key = 'supersecretkey'  # Replace in production
-
+app.permanent_session_lifetime = timedelta(minutes=10)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")
+app.config['SESSION_COOKIE_SECURE'] = True         # Only sent over HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True       # JS can't access it
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'   # Prevent CSRF
 VAULT_FILE = 'vault.json.enc'
+MASTER_HASH_FILE = "master.hash"
 
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if 'master' not in session or not session.get('2fa_passed'):
+            session.clear()
             return {"error": "Unauthorized"}, 401
         return f(*args, **kwargs)
     return wrapper
@@ -45,30 +53,26 @@ def load_vault_data():
 
 @app.route('/', methods=['POST'])
 def login():
-    if request.is_json:
-        master = request.json.get('master')
-    else:
-        master = request.form.get('master')
+    master = request.json.get('master') if request.is_json else request.form.get('master')
 
-    session['master'] = master
     session['2fa_passed'] = False
 
-    key = generate_key(master)
-
-    if not os.path.exists(VAULT_FILE):
-        with open(VAULT_FILE, "wb") as f:
-            f.write(encrypt_data({}, key))
-        update_last_access()
+    if not os.path.exists(MASTER_HASH_FILE):
+        # First time setup — hash and save password
+        hashed = bcrypt.hashpw(master.encode(), bcrypt.gensalt())
+        with open(MASTER_HASH_FILE, 'wb') as f:
+            f.write(hashed)
+        session.permanent = True        
+        session['master'] = master
         return {"status": "2fa_required"}, 200
 
-    try:
-        with open(VAULT_FILE, "rb") as f:
-            encrypted_data = f.read()
-        decrypt_data(encrypted_data, key)
-    except Exception:
+    with open(MASTER_HASH_FILE, 'rb') as f:
+        stored_hash = f.read()
+
+    if not bcrypt.checkpw(master.encode(), stored_hash):
         return {"error": "Incorrect master password"}, 401
 
-    update_last_access()
+    session['master'] = master
     return {"status": "2fa_required"}, 200
 
 
@@ -83,16 +87,7 @@ def verify_2fa():
 
     code = (request.form.get('code') or request.json.get('code') or '').strip()
 
-    # 🔍 —--- BEGIN DEBUG  (remove once it works)
-    print("–– DEBUG ––")
-    print("Stored secret:", secret)
-    server_now = pyotp.TOTP(secret).now()
-    print("TOTP server thinks is valid *right now*:", server_now)
-    print("Client sent:", code)
-    print("Unix-time:", int(time.time()))
-    # 🔍 —--- END DEBUG
-
-    if verify_totp_code(code, secret):      #  still uses your helper
+    if verify_totp_code(code, secret):   
         session['2fa_passed'] = True
         return {"status": "ok"}, 200
     return {"error": "Invalid 2FA code"}, 401
