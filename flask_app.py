@@ -8,13 +8,14 @@ import io
 import qrcode
 import base64
 
+import time, pyotp          # add to the imports at top
+
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.secret_key = 'supersecretkey'  # Replace in production
 
 VAULT_FILE = 'vault.json.enc'
-TOTP_SECRET = get_or_create_totp_secret()
-
 
 def login_required(f):
     @wraps(f)
@@ -50,6 +51,8 @@ def login():
         master = request.form.get('master')
 
     session['master'] = master
+    session['2fa_passed'] = False
+
     key = generate_key(master)
 
     if not os.path.exists(VAULT_FILE):
@@ -74,11 +77,26 @@ def verify_2fa():
     if 'master' not in session:
         return {"error": "Unauthorized"}, 401
 
-    code = request.form.get('code') or request.json.get('code')
-    if verify_totp_code(code, TOTP_SECRET):
+    secret = session.get('2fa_secret')
+    if not secret:
+        return {"error": "2FA setup incomplete"}, 400
+
+    code = (request.form.get('code') or request.json.get('code') or '').strip()
+
+    # 🔍 —--- BEGIN DEBUG  (remove once it works)
+    print("–– DEBUG ––")
+    print("Stored secret:", secret)
+    server_now = pyotp.TOTP(secret).now()
+    print("TOTP server thinks is valid *right now*:", server_now)
+    print("Client sent:", code)
+    print("Unix-time:", int(time.time()))
+    # 🔍 —--- END DEBUG
+
+    if verify_totp_code(code, secret):      #  still uses your helper
         session['2fa_passed'] = True
         return {"status": "ok"}, 200
     return {"error": "Invalid 2FA code"}, 401
+
 
 
 @app.route('/reset-vault', methods=['POST'])
@@ -88,6 +106,7 @@ def reset_vault():
         if os.path.exists(file):
             os.remove(file)
     return {"status": "authenticated"}, 200
+
 
 @app.route('/force-reset', methods=['POST'])
 def force_reset():
@@ -105,15 +124,16 @@ def force_reset():
         print(f"❌ Vault reset failed: {e}")
         return {"error": f"Failed to reset vault: {str(e)}"}, 500
 
+
 @app.route('/qrcode')
 def show_qr():
-    uri = get_provisioning_uri("VaultUser", TOTP_SECRET)
+    secret = get_or_create_totp_secret()
+    session['2fa_secret'] = secret
+    uri = get_provisioning_uri("VaultUser", secret=secret)
     img = qrcode.make(uri)
     buffer = io.BytesIO()
     img.save(buffer, format="PNG")
     qr_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-
-    # This must return an HTML <img> tag so React can parse base64 from it
     return f'<img src="data:image/png;base64,{qr_b64}" alt="QR Code">'
 
 
@@ -128,6 +148,7 @@ def api_credentials():
         {"site": site, "username": creds["username"], "password": creds["password"]}
         for site, creds in data.items()
     ]}, 200
+
 
 @app.route('/add-credential', methods=['POST'])
 @login_required
@@ -153,6 +174,7 @@ def add_credential():
     update_last_access()
     return {"message": f"Credential for '{site}' added."}, 200
 
+
 @app.route('/delete/<site>', methods=['POST'])
 @login_required
 def delete_site(site):
@@ -177,6 +199,7 @@ def delete_site(site):
             return {"error": "Site not found"}, 404
     except Exception as e:
         return {"error": str(e)}, 500
+
 
 @app.route('/edit/<site>', methods=['POST'])
 @login_required
@@ -216,10 +239,8 @@ def export():
     if data is None:
         return {"error": "Vault locked"}, 403
 
-    content = "".join([
-        f"Site: {site}\nUsername: {creds['username']}\nPassword: {creds['password']}\n\n"
-        for site, creds in data.items()
-    ])
+    content = "".join([f"Site: {site}\nUsername: {creds['username']}\nPassword: {creds['password']}\n\n"
+                       for site, creds in data.items()])
     return send_file(io.BytesIO(content.encode()), as_attachment=True, download_name='vault_export.txt', mimetype='text/plain')
 
 

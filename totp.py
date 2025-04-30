@@ -17,7 +17,8 @@ def verify_totp_code(code, secret):
     totp = pyotp.TOTP(secret)
     return totp.verify(code)
 
-def get_provisioning_uri(account_name="VaultApp", issuer="Credential Vault CLI"):
-    secret = get_or_create_totp_secret()
+def get_provisioning_uri(account_name="VaultApp", issuer="Credential Vault CLI", secret=None):
+    if not secret:
+        secret = get_or_create_totp_secret()
     totp = pyotp.TOTP(secret)
     return totp.provisioning_uri(name=account_name, issuer_name=issuer)
