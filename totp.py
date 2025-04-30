@@ -1,25 +1,13 @@
 import os
 import pyotp
-from flask import session
-
-TOTP_FILE = "totp_secret.txt"
 
 def get_or_create_totp_secret():
-    # Load from file if it exists
-    if os.path.exists(TOTP_FILE):
-        with open(TOTP_FILE, 'r') as f:
-            secret = f.read().strip()
-    else:
-        secret = pyotp.random_base32()
-        with open(TOTP_FILE, 'w') as f:
-            f.write(secret)
-
-    session['2fa_secret'] = secret  # store in session for quick access
-    return secret
+    # Use environment variable instead of file-based secret
+    return os.environ["TOTP_SECRET"]
 
 def verify_totp_code(code, secret):
     totp = pyotp.TOTP(secret)
-    return totp.verify(code, valid_window=1)  # ⬅️ allows ±30 seconds
+    return totp.verify(code, valid_window=1)  # allows ±30s
 
 def get_provisioning_uri(account_name="VaultApp", issuer="Credential Vault CLI", secret=None):
     if not secret:
