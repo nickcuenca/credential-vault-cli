@@ -14,17 +14,17 @@ function Vault() {
     return localStorage.getItem('darkMode') === 'true';
   });
 
-//   const generatePassword = (length = 12) => {
-//     // Function to generate a random password
-//     const charset =
-//       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
-//     let newPassword = "";
-//     for (let i = 0; i < length; i++) {
-//       const randomChar = charset[Math.floor(Math.random() * charset.length)];
-//       newPassword += randomChar;
-//     }
-//     return newPassword;
-//   };
+  const generatePassword = (length = 12) => {
+    // Function to generate a random password
+    const charset =
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
+    let newPassword = "";
+    for (let i = 0; i < length; i++) {
+      const randomChar = charset[Math.floor(Math.random() * charset.length)];
+      newPassword += randomChar;
+    }
+    return newPassword;
+  };
 
   const fetchCredentials = () => {
     // Fetch credentials from the backend
