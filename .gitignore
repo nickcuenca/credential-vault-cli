@@ -1,10 +1,16 @@
+# Python virtual environment and cache
 venv/
 __pycache__/
+*.pyc
+*.pyo
+
+# Encrypted vault files
 vault.json.enc
-vault_export.txt
-# Ignore test outputs
-*.log
-*.txt
-.last_access
 salt.bin
 vault_audit.log
+.last_access
+vault_export.txt
+
+# Logs and temp output
+*.log
+*.txt

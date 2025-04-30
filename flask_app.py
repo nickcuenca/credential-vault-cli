@@ -85,12 +85,15 @@ def verify_2fa():
 
     code = (request.form.get('code') or request.json.get('code') or '').strip()
 
-    if verify_totp_code(code):  # ✔ no secret passed, uses file
+    # 👇 Read the persistent secret from file (same used in /qrcode)
+    from totp import get_or_create_totp_secret
+    secret = get_or_create_totp_secret()
+
+    if verify_totp_code(code, secret):
         session['2fa_passed'] = True
         return {"status": "ok"}, 200
 
     return {"error": "Invalid 2FA code"}, 401
-
 
 
 @app.route('/reset-vault', methods=['POST'])

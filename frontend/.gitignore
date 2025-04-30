@@ -1,6 +1,5 @@
 # Node / React
 node_modules/
-frontend/node_modules/
 build/
 coverage/
 npm-debug.log*
@@ -8,7 +7,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # React env
-frontend/.env
+.env
 
 # Python / Flask
 __pycache__/
@@ -18,9 +17,7 @@ venv/
 master.hash
 
 # dotenv
-.env
 .env.*
-
 # System files
 .DS_Store
 
