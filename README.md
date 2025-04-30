@@ -1,28 +1,34 @@
+
 # 🔐 Credential Vault
 
-A full-stack password manager web app built with Flask (Python) and React. Users can securely store, edit, delete, and export credentials, protected by master password authentication and 2FA using TOTP (Google Authenticator).
+A full-stack password manager web app built with **Flask** (Python) and **React**. Users can securely store, edit, delete, and export credentials—protected by master password authentication and 2FA using TOTP (e.g., Google Authenticator).
+
+---
 
 ## 🚀 Features
 
-- ✅ Master password login with 2FA (Time-based One-Time Password)
-- 🔐 AES-encrypted vault stored locally (`vault.json.enc`)
+- ✅ Master password login with TOTP-based 2FA
+- 🔐 AES-encrypted vault file (`vault.json.enc`)
 - 🌐 React frontend with:
   - Add, edit, and delete credentials
-  - Password strength meter using `zxcvbn`
-  - Password generator with custom options (length, symbols, uppercase, numbers)
+  - Password strength meter (zxcvbn)
+  - Password generator with customizable rules
   - Light/Dark mode toggle
-  - Export credentials as plaintext (for backup)
-  - Logout + session management
-- 📋 Clipboard copy for generated passwords
-- 🧨 Reset and force-reset vault functionality
-- 🧪 Toast notifications for clipboard copy and error feedback
-- 🎨 Fully responsive UI with theming support
+  - Export plaintext credentials (backup)
+  - Session-based authentication and logout
+- 📋 Copy credentials to clipboard
+- 🧨 Reset and force-reset vault buttons
+- 🧪 Toast-based UI notifications
+
+---
 
 ## 🛠 Tech Stack
 
 - **Frontend:** React (Vite), Axios, zxcvbn
-- **Backend:** Flask, Flask-CORS, qrcode, base64, cryptography
-- **Deployment:** Flask via Render | React via Netlify
+- **Backend:** Flask, Flask-CORS, pyotp, qrcode, cryptography
+- **Deployment:** Render (Flask backend) + Netlify (React frontend)
+
+---
 
 ## 🧑‍💻 Local Setup
 
@@ -34,7 +40,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-> Ensure you have Python 3.8+ and `pip` installed.
+> Requires Python 3.8+ and `pip`.
 
 ### 2. Frontend (React)
 
@@ -44,33 +50,39 @@ npm install
 npm run dev
 ```
 
-> Visit `http://localhost:5173` (or your dev server port).
+> Open `http://localhost:5173` in your browser.
 
-### 3. Environment Notes
+---
 
-- First login sets the master password.
-- After login, visit `/qrcode` to scan with Google Authenticator.
-- All data is stored locally encrypted under `vault.json.enc`.
+## ⚙️ Environment Notes
 
-## 🛡 Security Considerations
+- First login sets your master password.
+- QR code for 2FA setup is available at `/qrcode`.
+- Vault is encrypted and stored locally as `vault.json.enc`.
 
-- All credential data is AES-encrypted using a key derived from the master password.
-- TOTP 2FA ensures MFA-level protection using QR and authenticator apps.
-- Backend endpoints are protected with Flask session-based auth.
+---
 
-## 📂 File Structure
+## 🔐 Security Design
+
+- AES encryption using a key derived from the master password
+- TOTP-based 2FA with QR provisioning (e.g., Google Authenticator)
+- Flask session authentication for protecting backend routes
+
+---
+
+## 📁 File Structure
 
 ```
-├── backend
-│   ├── app.py               # Flask backend app
-│   ├── vault.py             # Encryption utilities
-│   ├── totp.py              # TOTP QR and verification
-│   ├── vault.json.enc       # Encrypted vault data
-│   ├── salt.bin             # Salt for key derivation
-│   ├── vault_audit.log      # Optional audit trail
+├── backend/
+│   ├── app.py              # Flask app and API routes
+│   ├── vault.py            # AES encryption/decryption logic
+│   ├── totp.py             # TOTP QR generation + verification
+│   ├── vault.json.enc      # Encrypted vault (generated at runtime)
+│   ├── salt.bin            # Salt used for key derivation
+│   ├── vault_audit.log     # Audit logging (optional)
 │
-├── frontend
-│   ├── src
+├── frontend/
+│   ├── src/
 │   │   ├── App.css
 │   │   ├── Vault.jsx
 │   │   ├── AddCredential.jsx
@@ -81,11 +93,15 @@ npm run dev
 ├── README.md
 ```
 
-## 📦 Deployment
+---
 
-- Flask backend is hosted on [Render](https://render.com).
-- React frontend is hosted on [Netlify](https://netlify.com).
+## 🌐 Deployment
+
+- **Backend (Flask)**: Deployed to [Render](https://render.com)
+- **Frontend (React)**: Deployed to [Netlify](https://netlify.com)
 
 ---
 
-Made with ❤️ by Nicolas Cuenca
+## 🧑‍🎓 Author
+
+Made with ❤️ by **Nicolas Cuenca**
