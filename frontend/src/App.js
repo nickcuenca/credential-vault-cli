@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
-import Vault from './Vault';  // the page that shows credentials
-import Login from './Login';  // login page
+import React from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import Login from './Login'; // Replace with your component paths
+import Vault from './Vault'; // Replace with your component paths
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  return loggedIn ? <Vault /> : <Login onLogin={() => setLoggedIn(true)} />;
+  return (
+    <Router>
+      <div className="App">
+        <Switch>
+          <Route exact path="/" component={Login} />
+          <Route path="/vault" component={Vault} />
+        </Switch>
+      </div>
+    </Router>
+  );
 }
 
 export default App;
