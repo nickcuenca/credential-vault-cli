@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 import AddCredential from './AddCredential';
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
 
 function Vault() {
   const [credentials, setCredentials] = useState([]); // State for storing credentials
