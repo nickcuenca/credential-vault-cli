@@ -85,12 +85,16 @@ def verify_2fa():
 
     code = (request.form.get('code') or request.json.get('code') or '').strip()
 
-    # Don't manually fetch secret — let verify_totp_code() handle it
-    if verify_totp_code(code):
+    secret = os.environ["TOTP_SECRET"]          # <- SAME secret used for QR
+    expected = pyotp.TOTP(secret).now()         # <- DEBUG
+    print("DEBUG -- entered:", code,
+          "expected:", expected, "secret:", secret)   # <- DEBUG
+
+    if verify_totp_code(code, secret):
         session['2fa_passed'] = True
         return {"status": "ok"}, 200
-
     return {"error": "Invalid 2FA code"}, 401
+
 
 
 @app.route('/reset-vault', methods=['POST'])
