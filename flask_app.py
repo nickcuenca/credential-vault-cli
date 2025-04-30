@@ -91,8 +91,13 @@ def verify_2fa():
 
     secret = os.environ["TOTP_SECRET"]          # <- SAME secret used for QR
     expected = pyotp.TOTP(secret).now()         # <- DEBUG
-    print("DEBUG -- entered:", code,
-          "expected:", expected, "secret:", secret)   # <- DEBUG
+    print(
+        "DEBUG -- entered:", code,
+        "expected:", expected,
+        "secret:", secret,
+        flush=True         #  <-- add this
+    )
+
 
     if verify_totp_code(code, secret):
         session['2fa_passed'] = True
