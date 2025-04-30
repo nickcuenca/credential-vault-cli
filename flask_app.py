@@ -18,9 +18,11 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.permanent_session_lifetime = timedelta(minutes=10)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")
-app.config['SESSION_COOKIE_SECURE'] = True         # Only sent over HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True       # JS can't access it
-app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'   # Prevent CSRF
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='None',   # Allow cross-origin (important for local dev)
+    SESSION_COOKIE_SECURE=False       # ⛔ Set to True only when using HTTPS (like on Render)
+)
 VAULT_FILE = 'vault.json.enc'
 MASTER_HASH_FILE = "master.hash"
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 import AddCredential from './AddCredential';
+import { toast } from 'react-toastify';
 
 function Vault() {
   const [credentials, setCredentials] = useState([]); // State for storing credentials
@@ -29,7 +30,7 @@ function Vault() {
   const fetchCredentials = () => {
     // Fetch credentials from the backend
     axios
-      .get('http://localhost:5000/api/credentials', { withCredentials: true })
+      .get(`${process.env.REACT_APP_API}/api/credentials`, { withCredentials: true })
       .then((res) => {
         setCredentials(res.data.credentials || []);
       })
@@ -41,22 +42,41 @@ function Vault() {
   const handleLogout = () => {
     // Handle user logout
     axios
-      .get('http://localhost:5000/logout', { withCredentials: true })
+      .get(`${process.env.REACT_APP_API}/logout`, { withCredentials: true })
       .then(() => {
         window.location.reload(); // Reset app state
       });
   };
 
+  const handleForceReset = async () => {
+    if (!window.confirm("Are you sure? This will wipe all vault data.")) return;
+  
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API}/force-reset`, {
+        method: "POST",
+      });
+      const data = await res.json();
+  
+      if (res.ok) {
+        toast.success("✅ Vault reset successfully!");
+      } else {
+        toast.error(`❌ ${data.error || "Reset failed."}`);
+      }
+    } catch (err) {
+      toast.error("❌ Network error during reset.");
+    }
+  };
+  
   const handleExport = () => {
     // Handle exporting the credentials
-    window.open('http://localhost:5000/export', '_blank');
+    window.open(`${process.env.REACT_APP_API}/export`, '_blank');
   };
 
   const handleResetVault = () => {
     // Handle vault reset
     if (window.confirm('Are you sure you want to reset the vault? This will delete all data.')) {
       axios
-        .post('http://localhost:5000/reset-vault', {}, { withCredentials: true })
+        .post(`${process.env.REACT_APP_API}/reset-vault`, {}, { withCredentials: true })
         .then(() => {
           alert('✅ Vault reset successfully.');
           setCredentials([]); // Clear credentials state
@@ -72,7 +92,7 @@ function Vault() {
     // Handle deleting a credential
     if (window.confirm(`Delete credentials for ${site}?`)) {
       axios
-        .post(`http://localhost:5000/delete/${encodeURIComponent(site)}`, {}, { withCredentials: true })
+        .post(`${process.env.REACT_APP_API}/delete/${encodeURIComponent(site)}`, {}, { withCredentials: true })
         .then(() => fetchCredentials())
         .catch((err) => console.error('Delete failed:', err));
     }
@@ -176,7 +196,7 @@ function Vault() {
                       <button
                         onClick={() => {
                           axios
-                            .post(`http://localhost:5000/edit/${encodeURIComponent(cred.site)}`, editData, {
+                            .post(`${process.env.REACT_APP_API}/edit/${encodeURIComponent(cred.site)}`, editData, {
                               withCredentials: true,
                             })
                             .then(() => {

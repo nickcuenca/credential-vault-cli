@@ -1,17 +1,21 @@
 import os
 import pyotp
+from flask import session
 
 TOTP_FILE = "totp_secret.txt"
 
 def get_or_create_totp_secret():
+    # Load from file if it exists
     if os.path.exists(TOTP_FILE):
-        with open(TOTP_FILE, "r") as f:
-            return f.read().strip()
+        with open(TOTP_FILE, 'r') as f:
+            secret = f.read().strip()
     else:
         secret = pyotp.random_base32()
-        with open(TOTP_FILE, "w") as f:
+        with open(TOTP_FILE, 'w') as f:
             f.write(secret)
-        return secret
+
+    session['2fa_secret'] = secret  # store in session for quick access
+    return secret
 
 def verify_totp_code(code, secret):
     totp = pyotp.TOTP(secret)

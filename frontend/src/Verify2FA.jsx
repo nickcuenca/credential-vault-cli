@@ -8,23 +8,24 @@ function Verify2FA({ onSuccess }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Fetch QR code on load
-    axios.get('http://localhost:5000/qrcode', { withCredentials: true })
-      .then(res => {
-        // Parse base64 from HTML
-        const match = res.data.match(/src="data:image\/png;base64,([^"]+)"/);
-        if (match) {
-          setQR(`data:image/png;base64,${match[1]}`);
-        }
-      })
-      .catch(err => console.error('Failed to load QR code:', err));
-  }, []);
+    if (!qr) {  // don't refetch if already fetched
+      axios.get(`${process.env.REACT_APP_API}/qrcode`, { withCredentials: true })
+        .then(res => {
+          const match = res.data.match(/src="data:image\/png;base64,([^"]+)"/);
+          if (match) {
+            setQR(`data:image/png;base64,${match[1]}`);
+          }
+        })
+        .catch(err => console.error('Failed to load QR code:', err));
+    }
+  }, [qr]);
+  
 
   const handleVerify = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/verify-2fa', 
-        new URLSearchParams({ code }), 
+      await axios.post(`${process.env.REACT_APP_API}/verify-2fa`,
+        new URLSearchParams({ code }),
         { withCredentials: true }
       );
       setError('');
