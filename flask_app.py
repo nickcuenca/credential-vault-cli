@@ -53,6 +53,9 @@ def load_vault_data():
         session.clear()
         return None
 
+@app.route("/", methods=["HEAD", "GET"])
+def health():
+    return "", 200     # bare-bones OK response
 
 @app.route('/', methods=['POST'])
 def login():
@@ -127,7 +130,6 @@ def force_reset():
 @app.route('/qrcode')
 def show_qr():
     secret = get_or_create_totp_secret()
-    session['2fa_secret'] = secret
     uri = get_provisioning_uri("VaultUser", secret=secret)
     img = qrcode.make(uri)
     buffer = io.BytesIO()
