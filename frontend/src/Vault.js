@@ -48,24 +48,24 @@ function Vault() {
       });
   };
 
-  const handleForceReset = async () => {
-    if (!window.confirm("Are you sure? This will wipe all vault data.")) return;
+  // const handleForceReset = async () => {
+  //   if (!window.confirm("Are you sure? This will wipe all vault data.")) return;
   
-    try {
-      const res = await fetch(`${process.env.REACT_APP_API}/force-reset`, {
-        method: "POST",
-      });
-      const data = await res.json();
+  //   try {
+  //     const res = await fetch(`${process.env.REACT_APP_API}/force-reset`, {
+  //       method: "POST",
+  //     });
+  //     const data = await res.json();
   
-      if (res.ok) {
-        toast.success("✅ Vault reset successfully!");
-      } else {
-        toast.error(`❌ ${data.error || "Reset failed."}`);
-      }
-    } catch (err) {
-      toast.error("❌ Network error during reset.");
-    }
-  };
+  //     if (res.ok) {
+  //       toast.success("✅ Vault reset successfully!");
+  //     } else {
+  //       toast.error(`❌ ${data.error || "Reset failed."}`);
+  //     }
+  //   } catch (err) {
+  //     toast.error("❌ Network error during reset.");
+  //   }
+  // };
   
   const handleExport = () => {
     // Handle exporting the credentials
