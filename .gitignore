@@ -8,6 +8,3 @@ vault_export.txt
 .last_access
 salt.bin
 vault_audit.log
-
-# Ignore local environment variables
-.env
