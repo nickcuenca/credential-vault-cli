@@ -1,0 +1,1 @@
+web: gunicorn --log-level info --capture-output --enable-stdio-inheritance flask_app:app

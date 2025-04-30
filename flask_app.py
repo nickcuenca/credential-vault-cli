@@ -9,6 +9,8 @@ import qrcode
 import base64
 import bcrypt
 from datetime import timedelta
+from flask import current_app as logger
+
 
 
 import time, pyotp          # add to the imports at top
@@ -89,19 +91,18 @@ def verify_2fa():
 
     code = (request.form.get('code') or request.json.get('code') or '').strip()
 
-    secret = os.environ["TOTP_SECRET"]          # <- SAME secret used for QR
-    expected = pyotp.TOTP(secret).now()         # <- DEBUG
-    print(
-        "DEBUG -- entered:", code,
-        "expected:", expected,
-        "secret:", secret,
-        flush=True         #  <-- add this
-    )
+    secret   = os.environ["TOTP_SECRET"]
+    expected = pyotp.TOTP(secret).now()
 
+    app.logger.info(      # <── Gunicorn will forward this line
+        "TOTP-DEBUG | entered=%s expected=%s secret=%s",
+        code, expected, secret[:6] + "…",
+    )
 
     if verify_totp_code(code, secret):
         session['2fa_passed'] = True
         return {"status": "ok"}, 200
+
     return {"error": "Invalid 2FA code"}, 401
 
 
