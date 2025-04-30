@@ -13,6 +13,7 @@ from datetime import timedelta
 
 import time, pyotp          # add to the imports at top
 
+print("[BOOT]  TOTP_SECRET =", os.getenv("TOTP_SECRET", "<missing>"))
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
