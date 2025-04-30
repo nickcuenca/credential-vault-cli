@@ -83,15 +83,12 @@ def verify_2fa():
     if 'master' not in session:
         return {"error": "Unauthorized"}, 401
 
-    secret = session.get('2fa_secret')
-    if not secret:
-        return {"error": "2FA setup incomplete"}, 400
-
     code = (request.form.get('code') or request.json.get('code') or '').strip()
 
-    if verify_totp_code(code, secret):   
+    if verify_totp_code(code):  # ✔ no secret passed, uses file
         session['2fa_passed'] = True
         return {"status": "ok"}, 200
+
     return {"error": "Invalid 2FA code"}, 401
 
 
