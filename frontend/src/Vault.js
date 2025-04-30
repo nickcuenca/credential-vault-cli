@@ -12,16 +12,6 @@ function Vault() {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('darkMode') === 'true';
   });
-
-  const generatePassword = (length = 12) => {
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
-    let newPassword = "";
-    for (let i = 0; i < length; i++) {
-      const randomChar = charset[Math.floor(Math.random() * charset.length)];
-      newPassword += randomChar;
-    }
-    return newPassword;
-  };
   
   const fetchCredentials = () => {
     axios
