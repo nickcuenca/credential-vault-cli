@@ -1,0 +1,13 @@
+[run]
+# Don’t measure coverage for these files:
+omit =
+    cli.py
+    flask_app.py
+    audit.py
+    vault.py
+
+[report]
+# Hide these lines from the report
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
