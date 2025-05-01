@@ -6,9 +6,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# React env
-.env
-
 # Python / Flask
 __pycache__/
 *.pyc
