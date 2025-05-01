@@ -1,70 +1,108 @@
-# Getting Started with Create React App
+# 🔐 Credential Vault CLI
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full‑stack password manager built with **Flask + React**.  
+Users can securely **store, edit, delete, and export credentials**, protected by a **master password** and **TOTP‑based 2‑Factor Authentication**.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## ✨ Features
 
-### `npm start`
+| Category | Details |
+|----------|---------|
+| **Auth** | 🔑 First‑time master‑password setup <br> 🔐 TOTP 2‑factor using Google Authenticator/Authy |
+| **Vault** | AES‑256 encrypted `vault.json.enc` on the server <br> Add / edit / delete credentials <br> Export vault as plaintext backup |
+| **UI** | React (Vite) SPA <br> Dark / light mode <br> Password strength meter + generator |
+| **Security** | PBKDF2‑derived key, per‑user salt <br> Session cookies set **HttpOnly + Secure + SameSite=None** |
+| **Maintenance** | 🔄 Force‑reset endpoint <br> Audit trail (optional) |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🗂️ Tech Stack
 
-### `npm test`
+* **Frontend** – React 18, Axios, zxcvbn, Vite  
+* **Backend**  – Flask 3, Gunicorn, Flask‑CORS, pyotp, cryptography  
+* **Deployment** – **Render** (Flask)   |   **Netlify** (React)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🚀 Quick Start (local)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+# 1. Clone & enter project
+git clone https://github.com/<your‑user>/credential-vault-cli.git
+cd credential-vault-cli
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# 2. Backend
+cd backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+export FLASK_SECRET_KEY=$(python -c "import secrets,base64;print(secrets.token_urlsafe(32))")
+export TOTP_SECRET=$(python - <<'PY'
+import pyotp,os;print(pyotp.random_base32())
+PY)
+python flask_app.py
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+In a **second terminal**:
 
-### `npm run eject`
+```bash
+# 3. Frontend
+cd frontend
+npm install
+npm run dev          # http://localhost:5173
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+> 📱 Scan the QR code shown after login with Google Authenticator.  
+> The first password you enter becomes the master password.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🔧 Environment Variables (production)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+| Service  | Key              | Example value                            |
+|----------|------------------|------------------------------------------|
+| Render   | `FLASK_SECRET_KEY` | *generate a 32‑byte url‑safe secret* |
+| Render   | `TOTP_SECRET`    | *pyotp.random_base32()*                 |
+| Netlify  | `REACT_APP_API`  | `https://credential-vault-cli.onrender.com` |
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 🏗️ Deployment
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Back‑end (Render)
 
-### Code Splitting
+1. **New › Web Service** → **Python 3**.
+2. Point to repo & `flask_app.py`; set **Start Command**:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+   ```sh
+   gunicorn --log-level info --capture-output flask_app:app
+   ```
 
-### Analyzing the Bundle Size
+3. Add env vars above → Deploy.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Front‑end (Netlify)
 
-### Making a Progressive Web App
+1. **New Site from Git** → repo root, **build command**: `npm run build`, **publish directory**: `frontend/dist`.
+2. Add `REACT_APP_API` env var → Deploy.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+## 🛡️ Security Notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+* The encryption key is never stored – it’s derived from the master password + salt (PBKDF2‑SHA256 ✕ 200 000).
+* TOTP codes allow ±30 s drift (`valid_window=1`).
+* All cookies are `HttpOnly`, `Secure`, `SameSite=None` – required for cross‑origin front‑end ⇔ back‑end.
 
-### Deployment
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📸 Screenshots
 
-### `npm run build` fails to minify
+| Login → 2FA | Vault |
+|-------------|-------|
+| ![Login](docs/login.png) | ![Vault](docs/vault.png) |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+
+## 📜 License
+
+MIT © 2025 Nicolas Cuenca

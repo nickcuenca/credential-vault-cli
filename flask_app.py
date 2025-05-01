@@ -1,7 +1,6 @@
 from flask import Flask, request, session, send_file
 from vault import generate_key, decrypt_data, encrypt_data, update_last_access, is_vault_locked, read_audit_log
 from functools import wraps
-from flask_cors import CORS
 from totp import verify_totp_code, get_provisioning_uri, get_or_create_totp_secret
 import os
 import io
@@ -10,15 +9,21 @@ import base64
 import bcrypt
 from datetime import timedelta
 from flask import current_app as logger
+from flask_cors import CORS
 
 
+FRONT_ORIGIN = "https://credential-vault-cli.netlify.app"
 
 import time, pyotp          # add to the imports at top
 
 print("[BOOT]  TOTP_SECRET =", os.getenv("TOTP_SECRET", "<missing>"))
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
+CORS(
+    app,
+    origins=[FRONT_ORIGIN],   # 👈 Netlify URL
+    supports_credentials=True
+)
 app.permanent_session_lifetime = timedelta(minutes=10)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")
 app.config.update(
