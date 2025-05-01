@@ -22,10 +22,11 @@ CORS(app, supports_credentials=True)
 app.permanent_session_lifetime = timedelta(minutes=10)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")
 app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE='None',   # Allow cross-origin (important for local dev)
-    SESSION_COOKIE_SECURE=False       # ⛔ Set to True only when using HTTPS (like on Render)
+    SESSION_COOKIE_HTTPONLY = True,
+    SESSION_COOKIE_SAMESITE = 'None',
+    SESSION_COOKIE_SECURE   = True,   #  ← must be True in production
 )
+
 VAULT_FILE = 'vault.json.enc'
 MASTER_HASH_FILE = "master.hash"
 
