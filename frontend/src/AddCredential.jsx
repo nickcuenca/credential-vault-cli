@@ -46,7 +46,7 @@ function AddCredential({ onAdd }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/add-credential',
+      await axios.post(`${process.env.REACT_APP_API}/add-credential`,
         { site, username, password },
         { withCredentials: true }
       );
