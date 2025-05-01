@@ -45,6 +45,20 @@ def login_required(f):
     return wrapper
 
 
+@app.route("/qrcode")
+def show_qr():
+    secret = get_or_create_totp_secret()
+    # 3-arg call: account_name, issuer_name, secret
+    uri = get_provisioning_uri("VaultUser", "Credential-Vault", secret)
+
+    img = qrcode.make(uri)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return send_file(buf, mimetype="image/png")
+
+
+
 def load_vault_data():
     key = generate_key(session['master'])
     if not os.path.exists(VAULT_FILE):        
@@ -138,16 +152,6 @@ def force_reset():
         print(f"❌ Vault reset failed: {e}")
         return {"error": f"Failed to reset vault: {str(e)}"}, 500
 
-
-@app.route('/qrcode')
-def show_qr():
-    secret = get_or_create_totp_secret()
-    uri = get_provisioning_uri("VaultUser", secret=secret)
-    img = qrcode.make(uri)
-    buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
-    qr_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-    return f'<img src="data:image/png;base64,{qr_b64}" alt="QR Code">'
 
 
 @app.route('/api/credentials', methods=['GET'])
