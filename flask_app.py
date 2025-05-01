@@ -46,20 +46,20 @@ def login_required(f):
 
 
 def load_vault_data():
+    key = generate_key(session['master'])
+    if not os.path.exists(VAULT_FILE):        
+        return {}                             
+
     try:
-        key = generate_key(session['master'])
         with open(VAULT_FILE, "rb") as f:
-            encrypted_data = f.read()
-        data = decrypt_data(encrypted_data, key)
+            encrypted = f.read()
+        data = decrypt_data(encrypted, key)
+    except Exception as exc:
+        app.logger.warning("vault decrypt failed: %s", exc)
+        raise                                     
+    update_last_access()
+    return data
 
-        if is_vault_locked():
-            return None
-
-        update_last_access()
-        return data
-    except Exception:
-        session.clear()
-        return None
 
 @app.route("/", methods=["HEAD", "GET"])
 def health():
