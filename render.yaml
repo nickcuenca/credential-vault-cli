@@ -4,15 +4,19 @@ services:
     env: python
     plan: free
 
+    # ▸ install system libs ➜ install Python deps
     buildCommand: |
-      apt-get update -y
-      apt-get install -y libjpeg-dev zlib1g-dev   # Pillow PNG/JPEG support
-      pip install -r requirements.txt
+      apt-get update -y               \
+      && apt-get install -y --no-install-recommends \
+         libjpeg-dev zlib1g-dev       \
+      && pip install --upgrade pip    \
+      && pip install -r requirements.txt
 
-    startCommand: gunicorn flask_app:app
+    startCommand: >
+      gunicorn --log-level info --capture-output flask_app:app
 
     envVars:
       - key: FLASK_ENV
         value: production
-      - key: FLASK_SECRET_KEY
-        value: your-secret-key-here
+      - key: FLASK_SECRET_KEY        # generate once in the Render UI if you haven’t
+        sync: false
