@@ -3,8 +3,14 @@ services:
     name: credential-vault
     env: python
     plan: free
-    buildCommand: ""
+
+    buildCommand: |
+      apt-get update -y
+      apt-get install -y libjpeg-dev zlib1g-dev   # Pillow PNG/JPEG support
+      pip install -r requirements.txt
+
     startCommand: gunicorn flask_app:app
+
     envVars:
       - key: FLASK_ENV
         value: production
